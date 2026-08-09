@@ -1,0 +1,41 @@
+---
+interface Props {
+	id?: string;
+	eyebrow?: string;
+	title?: string;
+	copy?: string;
+	videoEmbedUrl?: string;
+}
+
+const {
+	id,
+	eyebrow,
+	title = 'Presentación',
+	copy,
+	videoEmbedUrl,
+} = Astro.props as Props;
+---
+
+<section id={id} class="space-y-6">
+	<header class="space-y-2 max-w-2xl">
+		{eyebrow && <p class="eyebrow m-0">{eyebrow}</p>}
+		{title && <h2 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink m-0">{title}</h2>}
+		{copy && <p class="text-muted m-0">{copy}</p>}
+	</header>
+
+	<div class="aspect-video w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-surface">
+		{videoEmbedUrl ? (
+			<iframe
+				src={videoEmbedUrl}
+				title="Video de presentación"
+				class="h-full w-full"
+				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+				allowfullscreen
+			></iframe>
+		) : (
+			<div class="flex h-full w-full items-center justify-center text-center text-sm text-muted px-6">
+				🎥 Video pendiente de subir
+			</div>
+		)}
+	</div>
+</section>

@@ -1,0 +1,28 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Card from '../../components/Card.astro';
+import { withBase } from '../../utils/slugify';
+
+const evidencias = [
+	{ title: 'Modelado', description: 'Próximamente.', href: '/evidencias/modelado' },
+	{ title: 'Normalización', description: 'Próximamente.', href: '/evidencias/normalizacion' },
+	{ title: 'SQL', description: 'Próximamente.', href: '/evidencias/sql' },
+	{ title: 'Proyecto', description: 'Próximamente.', href: '/evidencias/proyecto' },
+];
+---
+
+<PageLayout title="Evidencias" description="Evidencias del curso de Bases de Datos 1.">
+	<section class="content-shell py-12 space-y-8">
+		<header class="space-y-3 max-w-3xl">
+			<p class="eyebrow m-0">Bases de Datos 1</p>
+			<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Evidencias</h1>
+			<p class="text-muted">Modelado · Normalización · SQL · Proyecto — se irán llenando durante el semestre.</p>
+		</header>
+
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{evidencias.map((item) => (
+				<Card title={item.title} description={item.description} href={withBase(item.href)} />
+			))}
+		</div>
+	</section>
+</PageLayout>

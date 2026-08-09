@@ -300,6 +300,20 @@
 		padding-right: var(--grid-cell);
 	}
 
+	html {
+		scroll-behavior: smooth;
+	}
+
+	section[id] {
+		scroll-margin-top: calc(var(--grid-cell) * 1.5);
+	}
+
+	@media (max-width: 720px) {
+		section[id] {
+			scroll-margin-top: calc(var(--grid-cell) * 4.5);
+		}
+	}
+
 	.post-hero-image img {
 		border-radius: var(--radius-card);
 		border: 1px solid var(--color-border);

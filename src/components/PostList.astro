@@ -24,7 +24,10 @@ interface RawPost {
 }
 
 export interface Props {
+  id?: string;
+  eyebrow?: string;
   heading?: string;
+  copy?: string;
   posts?: RawPost[];
   limit?: number;
   viewAllHref?: string;
@@ -32,7 +35,10 @@ export interface Props {
 }
 
 let {
+  id,
+  eyebrow = "Some thoughts",
   heading = "Blog",
+  copy = "Stories and more about development",
   posts = [],
   limit = 6,
   viewAllHref,
@@ -57,17 +63,17 @@ const subpath = import.meta.env.BASE_URL;
 const visiblePosts = typeof limit === "number" ? posts.slice(0, limit) : posts;
 ---
 
-<section>
+<section id={id}>
   <div>
     <div class="grid grid-cols-1 border-base-200">
       <header class="space-y-2 max-w-2xl lg:pb-12">
-        <p class="eyebrow m-0">Some thoughts</p>
+        <p class="eyebrow m-0">{eyebrow}</p>
         <h2
           class="text-3xl sm:text-4xl font-semibold leading-tight text-ink m-0"
         >
-          Blog
+          {heading}
         </h2>
-        <p class="text-muted m-0">Stories and more about development</p>
+        <p class="text-muted m-0">{copy}</p>
       </header>
       <div
         class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-y-20 gap-x-8"
