@@ -1,9 +1,7 @@
 ---
-title: Interstellar Launch
-description: A project exploring seamless onboarding experiences for space-tech partners.
-pubDate: 2026-01-10
-heroImage: ../../assets/blog-placeholder-about.png
-updatedDate: 2026-01-12
+title: Próximamente
+description: Aún no hay proyectos publicados. Vuelve pronto para ver los primeros trabajos.
+pubDate: 2026-08-09
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse nec justo vitae sapien condimentum feugiat non quis justo.
+Todavía no hay proyectos publicados. Esta sección se irá llenando con trabajos a medida que estén listos.
