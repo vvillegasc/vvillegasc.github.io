@@ -6,6 +6,27 @@ import PageLayout from '../../layouts/PageLayout.astro';
 	<section class="content-shell py-12 space-y-4">
 		<p class="eyebrow m-0">Evidencias</p>
 		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Modelado</h1>
-		<p class="text-muted max-w-2xl">Próximamente. Aquí irán los diagramas entidad-relación y demás evidencias de modelado.</p>
+		<p class="text-muted max-w-2xl">Diagramas entidad-relación y demás evidencias de modelado.</p>
+	</section>
+
+	<section class="content-shell pb-16">
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">MER Biblioteca</h2>
+			<p class="text-muted max-w-3xl">
+				Crear un diseño E/R que permita gestionar los datos de una biblioteca de modo que:
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Las personas socias de la biblioteca disponen de un código de socio y además necesitar almacenar su cédula, dirección, teléfono, nombre y apellidos.</li>
+				<li>La biblioteca almacena libros que presta a los socios, de ellos se almacena su título, año en el que se escribió el libro, nombre completo del autor (o autores), año en que se editó, en qué editorial fue y el ISBN.</li>
+				<li>Necesitamos poder indicar si un libro en la biblioteca está dañado o no.</li>
+			</ul>
+			<div class="rounded-[calc(var(--radius-card)-4px)] border border-border bg-white p-4 overflow-x-auto">
+				<img
+					src="/evidencias/mer-biblioteca.drawio.svg"
+					alt="Diagrama entidad-relación MER Biblioteca"
+					class="mx-auto min-w-150"
+				/>
+			</div>
+		</article>
 	</section>
 </PageLayout>
