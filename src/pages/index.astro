@@ -12,6 +12,7 @@ import logo from '../assets/LogoPortfolio.png';
 const site = await getSite();
 
 const evidencias = [
+	{ title: 'Apuntes', description: 'Notas de teoría del curso.', href: '/evidencias/apuntes' },
 	{ title: 'Modelado', description: '- MER Biblioteca', href: '/evidencias/modelado' },
 	{ title: 'Normalización', description: 'Próximamente.', href: '/evidencias/normalizacion' },
 	{ title: 'SQL', description: 'Próximamente.', href: '/evidencias/sql' },
@@ -90,9 +91,9 @@ const projects = (await getCollection('projects'))
 		<header class="space-y-2 max-w-2xl">
 			<p class="eyebrow m-0">Evidencias</p>
 			<h2 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink m-0">Evidencias</h2>
-			<p class="text-muted m-0">Modelado · Normalización · SQL · Proyecto — se irán llenando durante el semestre.</p>
+			<p class="text-muted m-0">Apuntes · Modelado · Normalización · SQL · Proyecto — se irán llenando durante el semestre.</p>
 		</header>
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 			{evidencias.map((item) => (
 				<Card title={item.title} description={item.description} href={withBase(item.href)} />
 			))}

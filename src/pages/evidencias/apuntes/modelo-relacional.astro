@@ -1,0 +1,350 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+
+const motores = ['Oracle', 'PostgreSQL', 'MySQL', 'SQL Server', 'DB2', 'Informix'];
+
+const tiposNulo = [
+	{ term: 'Desconocido', def: 'existe pero no se sabe.' },
+	{ term: 'No disponible', def: 'se sabe pero no está registrado.' },
+	{ term: 'No aplica', def: 'el atributo no tiene sentido para ese caso.' },
+];
+
+const otrosTiposClave = [
+	{ term: 'Natural', def: 'dato del negocio que ya identifica (cédula, ISBN) — legible pero puede cambiar.' },
+	{ term: 'Artificial / subrogada', def: 'valor inventado por el sistema (secuencia, autonumérico) — nunca cambia, pero exige un join extra.' },
+	{ term: 'Inteligente', def: 'codifica información en sus caracteres (ej. código de producto con categoría) — la más peligrosa si el negocio cambia el significado.' },
+	{ term: 'Solapadas', def: 'dos claves candidatas que comparten algún atributo (válido, pero conviene documentarlo).' },
+];
+
+const politicasBorrado = [
+	{ nombre: 'Cascada', desc: 'se borran también los hijos (cómoda y peligrosa).' },
+	{ nombre: 'Restringido', desc: 'no deja borrar el padre mientras tenga hijos (comportamiento por defecto, casi siempre correcto).' },
+	{ nombre: 'Nulificación', desc: 'la foránea de los hijos queda en nulo (solo si la columna admite nulos).' },
+	{ nombre: 'Programada', desc: 'la aplicación decide con un procedimiento propio.' },
+];
+
+const tiposRestriccion = [
+	{ nombre: 'Inherentes / implícitas', desc: 'no hay que declararlas, el modelo no permite lo contrario (sin repetidos, sin multivalorados, celdas atómicas).' },
+	{ nombre: 'Basadas en el esquema / explícitas', desc: 'se declaran en el DDL y el motor las hace cumplir (dominios, PK, unicidad, integridad referencial, NOT NULL, CHECK). Todo lo que se pueda declarar aquí, debería declararse aquí.' },
+	{ nombre: 'Semánticas o de negocio', desc: 'reglas que el modelo no expresa por sí solo (ej. "un estudiante no puede inscribir más de 18 créditos") — se implementan con disparadores/aserciones o quedan a cargo de la aplicación.' },
+];
+
+const operaciones = [
+	{ term: 'INSERT', def: 'puede violar dominio, unicidad de clave, integridad de entidad o referencial (si el padre no existe).' },
+	{ term: 'DELETE', def: 'solo puede violar la integridad referencial (al borrar un padre con hijos).' },
+	{ term: 'UPDATE', def: 'puede violarlas todas, según la columna que se toque.' },
+	{ term: 'Transacción', def: 'conjunto de operaciones que debe dejar la base en un estado consistente — se aplica completa o no se aplica.' },
+];
+
+const aFavor = [
+	'Separación clara entre nivel lógico y físico (independencia de datos).',
+	'Sencillo.',
+	'Maduro y estandarizado.',
+	'Fundamento teórico sólido.',
+	'Fácil de modificar.',
+];
+
+const enContra = [
+	'No incluye comportamiento (solo datos, a diferencia de OO).',
+	'Le cuesta representar reglas complejas de negocio.',
+	'La herencia se simula (no existe de verdad).',
+	'Descompone la información en varias tablas — recomponerla cuesta joins (las vistas alivian esto en parte).',
+];
+
+const notaciones = [
+	{ nombre: 'Chen (1976)', desc: 'rectángulos, rombos, elipses — la del aula.' },
+	{ nombre: 'Pata de gallina / Information Engineering', desc: 'la más difundida en herramientas; se ahorra el rombo, la relación es la línea.' },
+	{ nombre: 'Barker / CASE*Method', desc: 'la de Oracle, más expresiva en el nivel conceptual.' },
+	{ nombre: 'IDEF1X', desc: 'estándar del gobierno de EE. UU., común en defensa e industria.' },
+	{ nombre: 'UML', desc: 'diagrama de clases con multiplicidades, cuando el diseño viene del software.' },
+];
+
+const comparativaCols = ['Concepto', 'Chen', 'Pata de gallina', 'Barker', 'UML'];
+const comparativaRows = [
+	['Entidad', 'rectángulo', 'rectángulo', 'caja redondeada', 'clase'],
+	['Atributo', 'elipse aparte', 'dentro de la caja', 'dentro (# _ o)', 'dentro de la clase'],
+	['Relación', 'rombo', 'línea', 'línea con nombres', 'asociación'],
+	['Uno', 'etiqueta 1', 'barra |', 'sin pata de gallina', '1'],
+	['Muchos', 'etiqueta N/M', 'pata de gallina', 'pata de gallina', '*'],
+	['Opcional', '(0,n) o línea simple', 'círculo O', 'media línea punteada', '0..1 / 0..*'],
+	['Obligatorio', '(1,n) o línea doble', 'barra |', 'media línea continua', '1 / 1..*'],
+	['Clave', 'atributo subrayado', 'PK en la caja', '#', 'estereotipo'],
+];
+---
+
+<PageLayout title="El Modelo Relacional · Apuntes" description="Apunte sobre el modelo relacional: antecedentes, claves, integridad, restricciones y notaciones.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">El Modelo Relacional</h1>
+		<p class="text-muted max-w-2xl">Antecedentes, vocabulario, claves, integridad, restricciones, operaciones y notaciones para dibujar el modelo.</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">1. Contexto</h2>
+			<p class="text-muted max-w-3xl">
+				El modelo E-R describe el negocio; el <strong class="text-ink font-medium">modelo relacional</strong> describe cómo se guarda: en relaciones (informalmente, tablas). Es el <strong class="text-ink font-medium">nivel lógico</strong>: ya hay claves y reglas, pero todavía no hay motor ni tipos de dato concretos.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">2. Antecedentes</h2>
+			<p class="text-muted max-w-3xl">
+				Propuesto por <strong class="text-ink font-medium">Edgar Frank Codd</strong> en «A Relational Model of Data for Large Shared Data Banks» (1970), matemático de IBM que propuso guardar los datos como conjuntos, no como punteros. Las primeras implementaciones comerciales llegaron a inicios de los 80. Se impuso porque es más sencillo que el jerárquico/red (se busca por contenido, no por punteros) y tiene fundamento matemático (teoría de conjuntos, álgebra y cálculo relacional).
+			</p>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Motores</p>
+				<ul class="flex flex-wrap gap-2 list-none p-0 m-0">
+					{motores.map((motor) => (
+						<li class="rounded-full border border-border bg-surface px-3 py-1 text-sm text-ink">{motor}</li>
+					))}
+				</ul>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">3. Aviso de vocabulario (muy importante)</h2>
+			<p class="lead max-w-3xl">
+				La palabra <strong class="text-ink">"relación"</strong> significa dos cosas distintas: en el <strong class="text-ink">E-R</strong> es la asociación entre entidades (el rombo); en el <strong class="text-ink">modelo relacional</strong> es la tabla misma (término formal de Codd).
+			</p>
+			<p class="text-muted max-w-3xl">
+				Además, <strong class="text-ink font-medium">clave primaria</strong> y <strong class="text-ink font-medium">clave foránea</strong> son conceptos del modelo relacional, no del E-R (allí se habla de "identificador único"). Confundir los dos vocabularios es el error más común de la materia.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">4. Anatomía de una relación</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Cabecera:</strong> nombres de los atributos (columnas).</li>
+				<li><strong class="text-ink font-medium">Cuerpo:</strong> las tuplas (filas).</li>
+				<li><strong class="text-ink font-medium">Grado o aridad:</strong> número de atributos.</li>
+				<li><strong class="text-ink font-medium">Cardinalidad o extensión:</strong> número de tuplas.</li>
+				<li>Relación = tabla · Tupla = fila/registro · Atributo = columna/campo · Dominio = tipo de valores permitidos.</li>
+				<li>Una relación es un <strong class="text-ink font-medium">conjunto</strong>: sin orden en tuplas ni atributos, y sin tuplas repetidas.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">5. Definición formal</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-2">
+				<li><strong class="text-ink font-medium">Esquema de relación:</strong> <code>R(A₁, A₂, …, Aₙ)</code>, donde R es el nombre y cada Aᵢ un atributo con su dominio Dᵢ. Es la estructura, no cambia con los datos.</li>
+				<li><strong class="text-ink font-medium">Estado de la relación:</strong> <code>r(R)</code> es un conjunto de n-tuplas; <code>r(R) ⊆ dom(A₁) × dom(A₂) × … × dom(Aₙ)</code> — una relación es un subconjunto del producto cartesiano de los dominios (definición matemática de Codd).</li>
+				<li><strong class="text-ink font-medium">Dominio:</strong> conjunto de valores atómicos (indivisibles), definido por tipo de dato y rango.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">6. Propiedades de una relación</h2>
+			<p class="text-muted max-w-3xl">
+				De ser un conjunto se deduce: tuplas sin orden, atributos sin orden (mientras se mantenga la correspondencia atributo-valor), y sin tuplas repetidas. De cada celda se exige <strong class="text-ink font-medium">atomicidad</strong>: un solo valor, no una lista — es el modelo <strong class="text-ink font-medium">relacional plano</strong>, que asume <strong class="text-ink font-medium">primera forma normal (1FN)</strong>. Por eso no admite atributos compuestos ni multivalorados: un multivalorado se resuelve con una relación aparte, un compuesto con varios atributos simples.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">7. Los valores nulos</h2>
+			<p class="text-muted max-w-3xl">
+				Un nulo <strong class="text-ink font-medium">no es cero ni cadena vacía</strong>; es ausencia de valor, y puede significar tres cosas que el modelo no distingue:
+			</p>
+			<dl class="grid gap-3 sm:grid-cols-3">
+				{tiposNulo.map(({ term, def }) => (
+					<div class="space-y-1">
+						<dt class="text-ink font-semibold">{term}</dt>
+						<dd class="text-muted">{def}</dd>
+					</div>
+				))}
+			</dl>
+			<p class="text-muted max-w-3xl">
+				Complican porque cualquier comparación con nulo da "desconocido" (no verdadero ni falso) — un <code>NOT IN</code> sobre una lista con nulos puede devolver cero filas sin error. Postura práctica: permitirlos solo donde el negocio realmente admita ausencia de dato.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">8. Claves</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Superclave:</strong> conjunto de atributos que identifica sin ambigüedad (puede tener atributos de sobra).</li>
+				<li><strong class="text-ink font-medium">Clave candidata:</strong> superclave mínima (irreducible).</li>
+				<li><strong class="text-ink font-medium">Clave primaria:</strong> la candidata elegida por el diseñador; las demás quedan como alternativas.</li>
+				<li><strong class="text-ink font-medium">Clave foránea:</strong> atributo que referencia la clave primaria/alternativa de otra relación (o de sí misma).</li>
+				<li>Toda relación tiene al menos una clave candidata porque no admite tuplas repetidas (en el peor caso, la clave es el conjunto de todos los atributos).</li>
+			</ul>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Otros tipos de clave (según origen)</p>
+				<dl class="grid gap-3 sm:grid-cols-2">
+					{otrosTiposClave.map(({ term, def }) => (
+						<div class="space-y-1">
+							<dt class="text-ink font-semibold">{term}</dt>
+							<dd class="text-muted">{def}</dd>
+						</div>
+					))}
+				</dl>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">9. Por qué aparece una clave foránea</h2>
+			<p class="text-muted max-w-3xl">
+				Ejemplo: si <code>CURSO</code> guarda el nombre del profesor como texto, dos profesoras homónimas ("Megan Fox") no se pueden distinguir. Solución: separar en dos relaciones:
+			</p>
+			<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+				<p><code>PROFESOR(<u>id_profesor</u>, nombre, apellido, correo)</code></p>
+				<p><code>CURSO(<u>codigo</u>, nombre, creditos, <em>id_profesor</em>, semestre)</code></p>
+			</div>
+			<p class="text-muted max-w-3xl">
+				donde <code>CURSO.id_profesor</code> es clave foránea hacia <code>PROFESOR.id_profesor</code>. Así se implementa, en el modelo relacional, la línea que el E-R dibujaba.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">10. Las dos reglas de integridad</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Integridad de entidad:</strong> ningún componente de la clave primaria puede ser nulo (si identifica, no puede faltar).</li>
+				<li><strong class="text-ink font-medium">Integridad referencial:</strong> ningún componente de una clave foránea puede tener un valor que no exista en la clave referenciada.</li>
+				<li>Una foránea <strong class="text-ink font-medium">sí puede aceptar nulos</strong> cuando la participación es opcional (significa "aún no relacionado"). El dominio de la foránea debe ser el mismo que el de la clave referenciada.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">11. Qué pasa si se borra el padre</h2>
+			<p class="text-muted max-w-3xl">Cuatro políticas ante una clave foránea que apunta a una tupla borrada:</p>
+			<ol class="text-muted max-w-3xl list-decimal pl-5 space-y-1.5">
+				{politicasBorrado.map((p) => (
+					<li><strong class="text-ink font-medium">{p.nombre}:</strong> {p.desc}</li>
+				))}
+			</ol>
+			<p class="text-muted max-w-3xl">Las mismas opciones aplican al actualizar — argumento a favor de claves subrogadas, que nunca cambian y no disparan cascadas.</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">12. Los tres tipos de restricción</h2>
+			<ol class="text-muted max-w-3xl list-decimal pl-5 space-y-1.5">
+				{tiposRestriccion.map((r) => (
+					<li><strong class="text-ink font-medium">{r.nombre}:</strong> {r.desc}</li>
+				))}
+			</ol>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">13. Operaciones sobre las relaciones</h2>
+			<dl class="grid gap-3 sm:grid-cols-2">
+				{operaciones.map(({ term, def }) => (
+					<div class="space-y-1">
+						<dt class="text-ink font-semibold"><code>{term}</code></dt>
+						<dd class="text-muted max-w-md">{def}</dd>
+					</div>
+				))}
+			</dl>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">14. Ventajas y límites</h2>
+			<div class="grid gap-4 sm:grid-cols-2">
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+					<p class="text-ink font-semibold">A favor</p>
+					<ul class="text-muted list-disc pl-5 space-y-1.5">
+						{aFavor.map((item) => <li>{item}</li>)}
+					</ul>
+				</div>
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+					<p class="text-ink font-semibold">En contra</p>
+					<ul class="text-muted list-disc pl-5 space-y-1.5">
+						{enContra.map((item) => <li>{item}</li>)}
+					</ul>
+				</div>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">15. Notaciones para dibujar el modelo</h2>
+			<p class="text-muted max-w-3xl">
+				Todas representan lo mismo (entidades, atributos, relaciones, cardinalidades); cambian los símbolos, no las ideas:
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				{notaciones.map((n) => (
+					<li><strong class="text-ink font-medium">{n.nombre}:</strong> {n.desc}</li>
+				))}
+			</ul>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Pata de gallina — el alfabeto</p>
+				<p class="text-muted max-w-3xl">
+					Cada extremo lleva dos marcas (la pegada a la entidad = máximo, la de atrás = mínimo). Barra = uno, círculo = cero, pata de gallina = muchos. Combinaciones: uno y solo uno, cero o uno, uno o muchos, cero o muchos.
+				</p>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Barker</p>
+				<p class="text-muted max-w-3xl">
+					Entidad en caja de esquinas redondeadas, atributos dentro (no en elipses). Símbolos: <code>#</code> identificador único (será la PK), <code>* *</code> obligatorio (NOT NULL), <code>o</code> opcional (admite nulos). La relación se lee como frase: media línea punteada = "puede" (opcional), continua = "debe" (obligatoria); pata de gallina = "uno o más". Regla de oro: si no se puede leer en voz alta como dos frases correctas, está mal dibujado. También maneja <strong class="text-ink font-medium">subtipos</strong> (dibujados dentro del supertipo) y <strong class="text-ink font-medium">arco exclusivo</strong> (ej. un pago es con tarjeta O con cuenta, nunca ambas).
+				</p>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Tabla comparativa rápida</p>
+				<div class="overflow-x-auto">
+					<table>
+						<thead>
+							<tr>
+								{comparativaCols.map((col) => <th>{col}</th>)}
+							</tr>
+						</thead>
+						<tbody>
+							{comparativaRows.map((row) => (
+								<tr>
+									{row.map((cell, i) => (
+										i === 0
+											? <td class="text-ink font-medium whitespace-nowrap">{cell}</td>
+											: <td class="whitespace-nowrap">{cell}</td>
+									))}
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</article>
+	</section>
+</PageLayout>
+
+<style>
+	.lead {
+		border-left: 2px solid var(--color-border);
+		padding-left: 1rem;
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.15em 0.4em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+
+	th,
+	td {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	th {
+		color: var(--color-ink);
+		font-weight: 600;
+	}
+
+	td {
+		color: var(--color-muted);
+	}
+</style>

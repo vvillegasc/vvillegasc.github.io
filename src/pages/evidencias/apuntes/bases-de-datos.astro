@@ -1,0 +1,134 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+
+const extPill = 'inline-flex items-center rounded-full border border-border bg-surface px-2.5 py-0.5 font-mono text-xs text-ink';
+
+const archivosTexto = [
+	{ label: 'Configuración', exts: ['.ini', '.inf', '.conf'] },
+	{ label: 'Código fuente', exts: ['.java', '.sql', '.c'] },
+	{ label: 'Páginas web', exts: ['.html', '.php', '.css', '.xml'] },
+	{ label: 'Formatos enriquecidos', exts: ['.rtf', '.ps', '.tex'] },
+];
+
+const archivosBinarios = [
+	{ label: 'Imagen', exts: ['.jpg', '.gif', '.tif', '.bmp', '.wmf', '.png', '.pcx'] },
+	{ label: 'Video', exts: ['.mpg', '.mov', '.avi', '.qt'] },
+	{ label: 'Comprimidos', exts: ['.zip', '.z', '.gz', '.tar', '.lhz'] },
+	{ label: 'Ejecutables', exts: ['.exe', '.com', '.cg', '.o', '.a'] },
+	{ label: 'Procesadores de texto', exts: ['.doc', '.odt'] },
+];
+
+const conceptos = [
+	{ term: 'Dato', def: 'Trozo de información concreta sobre un concepto o suceso.' },
+	{ term: 'Tipo de dato', def: 'Naturaleza del campo. Los hay numéricos, alfanumérico, fecha, etc.' },
+	{ term: 'Campo', def: 'Identificador para toda una familia de datos. Se le suele llamar también Columna.' },
+	{ term: 'Registro', def: 'Recolección de datos referentes a un mismo concepto o suceso.' },
+	{ term: 'Campo clave', def: 'Campo (o campos) esencial (o esenciales) que identifica de forma única a cada registro.' },
+	{ term: 'Tabla', def: 'Conjunto de registros bajo un mismo nombre que representa un conjunto de todos ellos.' },
+];
+
+const componentesDBMS = ['Dato', 'Hardware', 'Software', 'Usuario'];
+---
+
+<PageLayout title="Bases de Datos · Apuntes" description="Apunte sobre archivos, bases de datos y sistemas gestores de bases de datos (DBMS).">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Bases de Datos</h1>
+		<p class="text-muted max-w-2xl">Archivos de texto y binarios, el concepto de base de datos, su estructura y los sistemas gestores de bases de datos (DBMS).</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<div class="grid gap-6 md:grid-cols-2">
+			<article class="card space-y-4">
+				<h2 class="text-xl font-semibold text-ink">Archivos de texto</h2>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li>Estándar ASCII: asigna un valor numérico a cada carácter.</li>
+					<li>Legibles por los humanos.</li>
+				</ul>
+				<div class="space-y-2.5">
+					{archivosTexto.map((group) => (
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="text-sm text-ink font-medium min-w-32">{group.label}</span>
+							<div class="flex flex-wrap gap-1.5">
+								{group.exts.map((ext) => <span class={extPill}>{ext}</span>)}
+							</div>
+						</div>
+					))}
+				</div>
+			</article>
+
+			<article class="card space-y-4">
+				<h2 class="text-xl font-semibold text-ink">Archivos binarios</h2>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li>Los que no son de texto y requieren un formato para ser interpretado.</li>
+					<li>Las bases de datos suelen usar archivos binarios para estructurar la información de manera lógica y organizada.</li>
+				</ul>
+				<div class="space-y-2.5">
+					{archivosBinarios.map((group) => (
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="text-sm text-ink font-medium min-w-32">{group.label}</span>
+							<div class="flex flex-wrap gap-1.5">
+								{group.exts.map((ext) => <span class={extPill}>{ext}</span>)}
+							</div>
+						</div>
+					))}
+				</div>
+			</article>
+		</div>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Archivos y flujos</h2>
+			<p class="text-muted max-w-3xl">
+				Cuando se trabaja con archivos, se deben considerar algunos aspectos, como por ejemplo: el archivo puede estar dañado, no hay más espacio para almacenar información, etc. Por ello es necesario el tratamiento de excepciones.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Bases de datos — concepto</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Colección de información perteneciente a un mismo contexto o problema.</li>
+				<li>Organizada mediante tablas: cada fila almacena un registro con tantos campos (trozo discreto de información) como columnas tenga la tabla.</li>
+				<li>Las tablas se relacionan formando vínculos o relaciones para mantener la información de forma ordenada y coherente.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Bases de datos — conceptos</h2>
+			<dl class="grid gap-4 sm:grid-cols-2">
+				{conceptos.map(({ term, def }) => (
+					<div class="space-y-1">
+						<dt class="text-ink font-semibold">{term}</dt>
+						<dd class="text-muted max-w-md">{def}</dd>
+					</div>
+				))}
+			</dl>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Bases de datos — estructura</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Los datos se almacenan a través de esquemas.</li>
+				<li><strong class="text-ink font-medium">Esquema:</strong> definición de la estructura donde se almacenan las bases de datos.</li>
+				<li>Los esquemas contienen elementos como tablas, registros, campos, procedimientos, vistas, índices, etc.</li>
+				<li>Al esquema se le conoce también como metainformación.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Sistema gestor de base de datos (DBMS)</h2>
+			<p class="text-muted max-w-3xl">
+				Es un software que sirve como intermediario entre los usuarios y una base de datos, permitiendo almacenar, modificar, extraer y asegurar la información de manera eficiente.
+			</p>
+			<div class="space-y-2">
+				<span class="text-sm text-ink font-medium">Componentes</span>
+				<ul class="flex flex-wrap gap-2 list-none p-0 m-0">
+					{componentesDBMS.map((item) => (
+						<li class="rounded-full border border-border bg-surface px-3 py-1 text-sm text-ink">{item}</li>
+					))}
+				</ul>
+			</div>
+		</article>
+	</section>
+</PageLayout>

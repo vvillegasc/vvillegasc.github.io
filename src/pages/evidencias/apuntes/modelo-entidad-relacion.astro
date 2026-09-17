@@ -1,0 +1,401 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+
+const tiposEntidad = [
+	{ tipo: 'Tangible', desc: 'Existencias físicas del mundo real', ejemplos: 'Vehículos, Personas, Productos' },
+	{ tipo: 'Intangible', desc: 'No tienen presencia física, solo lógica', ejemplos: 'Cuenta bancaria, Sistema de notas, Cuentas de redes sociales' },
+];
+
+const cardinalidades = [
+	{
+		tipo: 'Uno a Uno (1:1)',
+		notacion: '1 — 1',
+		desc: 'Un registro de la tabla 1 se relaciona con solo un registro de la tabla 2, y viceversa.',
+		ejemplo: 'PROFESOR —Tener→ CUBÍCULO (1 profesor = 1 cubículo)',
+	},
+	{
+		tipo: 'Uno a Muchos (1:M)',
+		notacion: '1 — M',
+		desc: 'Un registro de la tabla 1 se relaciona con muchos de la tabla 2, pero cada uno de estos solo con uno de la tabla 1.',
+		ejemplo: 'GENERAL —Dirigir→ SOLDADO (1 general, muchos soldados; cada soldado tiene 1 general)',
+	},
+	{
+		tipo: 'Muchos a Uno (M:1)',
+		notacion: 'M — 1',
+		desc: '—',
+		ejemplo: '—',
+	},
+	{
+		tipo: 'Muchos a Muchos (M:N)',
+		notacion: 'M — M',
+		desc: 'Muchos registros de la tabla 1 se relacionan con muchos de la tabla 2.',
+		ejemplo: 'EQUIPO —Jugar→ ESTADIO (un equipo juega en muchos estadios y un estadio recibe muchos equipos)',
+	},
+];
+---
+
+<PageLayout title="Modelo Entidad Relación · Apuntes" description="Apunte sobre el modelo entidad relación (MER): entidades, atributos, relaciones, cardinalidad y MER extendido.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Modelo Entidad Relación</h1>
+		<p class="text-muted max-w-2xl">Entidades, atributos, relaciones, cardinalidad y las extensiones del MER (roles, especialización/generalización y agregación).</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">¿Qué es?</h2>
+			<p class="lead max-w-3xl">
+				El MER es como el "plano" en arquitectura, pero para bases de datos: nos permite <strong class="text-ink">planificar cómo quedará la base de datos</strong> antes de construirla, para que sea funcional y optimizada.
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Es un conjunto de diagramas que identifican todos los elementos que contendrá la base de datos.</li>
+				<li>Es <strong class="text-ink font-medium">universal</strong>: se desarrolla y analiza igual en cualquier parte del mundo.</li>
+				<li>Su correcta comprensión evita <strong class="text-ink font-medium">redundancia</strong> (datos repetidos) y hace la base de datos más eficiente.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Entidades</h2>
+			<p class="lead max-w-3xl">Son <strong class="text-ink">TODO aquello donde podemos guardar información</strong>.</p>
+			<p class="text-muted max-w-3xl">Una cosa real o no, tangible o no, y que tiene características o atributos.</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Pueden ser objetos de la vida real (ej: vehículo) o algo abstracto (ej: cuenta bancaria).</li>
+				<li>Se representan con un <strong class="text-ink font-medium">rectángulo</strong>.</li>
+				<li>Ejemplo: <code>CLIENTE</code>, <code>VEHÍCULO</code>, <code>PAQUETE</code>, <code>TELEVISORES</code>.</li>
+			</ul>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Según el tipo de información</p>
+				<div class="overflow-x-auto">
+					<table>
+						<thead>
+							<tr>
+								<th>Tipo</th>
+								<th>Descripción</th>
+								<th>Ejemplos</th>
+							</tr>
+						</thead>
+						<tbody>
+							{tiposEntidad.map((row) => (
+								<tr>
+									<td class="text-ink font-medium whitespace-nowrap">{row.tipo}</td>
+									<td>{row.desc}</td>
+									<td>{row.ejemplos}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<div class="space-y-3">
+				<p class="text-sm font-medium text-ink">Según su conformación (las importantes)</p>
+
+				<div class="grid gap-4 sm:grid-cols-2">
+					<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+						<p class="text-ink font-semibold">Entidad Fuerte</p>
+						<ul class="text-muted list-disc pl-5 space-y-1.5">
+							<li>Tiene una <strong class="text-ink font-medium">clave primaria propia</strong> que identifica cada tupla de forma única.</li>
+							<li>No necesita de ninguna otra entidad para existir.</li>
+							<li>Notación: rectángulo simple.</li>
+							<li>Ejemplo: <code>Empleados(<u>id</u>, nombres, apellidos)</code>, <code>Productos(<u>serial</u>, modelos, pesos)</code>.</li>
+						</ul>
+					</div>
+
+					<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+						<p class="text-ink font-semibold">Entidad Débil</p>
+						<ul class="text-muted list-disc pl-5 space-y-1.5">
+							<li>No tiene clave primaria propia; depende de una <strong class="text-ink font-medium">entidad fuerte</strong> y toma su clave foránea para poder existir.</li>
+							<li>Notación: rectángulo con doble borde.</li>
+							<li>Ejemplo: <code>Cuenta(num, saldo) → Transacción(num_transacción, fecha, cantidad)</code>.</li>
+							<li>
+								Dos tipos de dependencia:
+								<ul class="list-disc pl-5 mt-1.5 space-y-1.5">
+									<li><strong class="text-ink font-medium">Por existencia</strong>: la entidad débil no puede existir sin la fuerte (poco comunes). Ej: <code>Ciudadanos —E→ Hijos</code> (si no hay ciudadano, no puede haber hijo).</li>
+									<li><strong class="text-ink font-medium">Por identidad</strong>: se necesita la entidad fuerte solo para <strong class="text-ink font-medium">identificar</strong> a la débil (la débil puede seguir existiendo si cambia la fuerte). Ej: <code>Estados —ID→ Ciudades</code> (dos ciudades pueden llamarse igual; se necesita el estado para diferenciarlas).</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Atributos</h2>
+			<p class="lead max-w-3xl">Son <strong class="text-ink">todas las características</strong> que nos interesa almacenar de una entidad.</p>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Tipos</p>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li><strong class="text-ink font-medium">Simple</strong>: no puede dividirse (ej. peso, edad).</li>
+					<li><strong class="text-ink font-medium">Derivados</strong>: pueden calcularse a partir de otro atributo (ej. edad, signo zodiacal).</li>
+					<li><strong class="text-ink font-medium">Compuestos</strong>: atributos que se pueden dividir pero al concatenarse forman un atributo (ej. nombre → Valentina Villegas Correal).</li>
+					<li><strong class="text-ink font-medium">Clave</strong>: identifica de forma única (ej. cédula, NIT).</li>
+					<li><strong class="text-ink font-medium">Multivaluados</strong>: pueden tener más de un valor.</li>
+				</ul>
+			</div>
+
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Se representan con <strong class="text-ink font-medium">óvalos</strong> conectados a la entidad.</li>
+				<li>Ejemplo entidad <code>VEHÍCULO</code>: matrícula, marca, color, serie.</li>
+				<li>Ejemplo entidad <code>CLIENTE</code>: ID, nombres, apellidos.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Llave o Clave Primaria</h2>
+			<p class="lead max-w-3xl">Atributo que permite <strong class="text-ink">identificar o diferenciar una fila de otra</strong> de manera única e irrepetible.</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>No pueden usarse atributos que se repitan (ej: color o marca) porque muchos registros pueden compartir ese valor.</li>
+				<li>Se representa <strong class="text-ink font-medium">subrayando</strong> el atributo (ej: <code><u>ID</u></code> subrayado en Clientes, <code><u>matrícula</u></code> subrayada en Vehículos).</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Relaciones</h2>
+			<p class="lead max-w-3xl">Ocurren cuando <strong class="text-ink">nuestras entidades interactúan entre sí</strong> (comparten atributos).</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Se representan con un <strong class="text-ink font-medium">rombo / diamante</strong>.</li>
+				<li>Ejemplo: <code>CLIENTE —Comprar→ VEHÍCULO</code>.</li>
+			</ul>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Clasificación por número de entidades</p>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li><strong class="text-ink font-medium">Relación Binaria</strong>: solo dos entidades relacionadas (la más común). <code>TABLA 1 — Relación — TABLA 2</code>.</li>
+					<li><strong class="text-ink font-medium">Relación Ternaria</strong>: tres entidades interactuando entre sí (menos común, suele darse con cardinalidades muchos a muchos). <code>TABLA 1 / TABLA 2 / TABLA 3</code> conectadas al mismo rombo.</li>
+				</ul>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Cardinalidad en el MER</h2>
+			<p class="text-muted max-w-3xl">Define <strong class="text-ink font-medium">cómo se relacionan</strong> las entidades entre sí (cuántas instancias de una se asocian con cuántas de la otra).</p>
+
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>Tipo</th>
+							<th>Notación</th>
+							<th>Descripción</th>
+							<th>Ejemplo</th>
+						</tr>
+					</thead>
+					<tbody>
+						{cardinalidades.map((row) => (
+							<tr>
+								<td class="text-ink font-medium whitespace-nowrap">{row.tipo}</td>
+								<td class="whitespace-nowrap">{row.notacion}</td>
+								<td>{row.desc}</td>
+								<td>{row.ejemplo}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Ejemplo integrador (Clientes / Vehículos)</h2>
+			<pre><code>{`        ID  nombres  apellidos          matrícula  marca  color  serie
+          \\    |     /                       \\      |      |    /
+        [ CLIENTES ] — 1 —(Comprar)— M — [ VEHÍCULOS ]`}</code></pre>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Entidades: <code>CLIENTE</code>, <code>VEHÍCULO</code></li>
+				<li>Atributos Clientes: ID (PK), nombres, apellidos</li>
+				<li>Atributos Vehículos: matrícula (PK), marca, color, serie</li>
+				<li>Relación: Comprar</li>
+				<li>Cardinalidad: 1:M (un cliente puede comprar muchos vehículos)</li>
+			</ul>
+		</article>
+
+		<header class="space-y-2 pt-6 max-w-3xl">
+			<p class="eyebrow m-0">Extensión del modelo</p>
+			<h2 class="text-2xl sm:text-3xl font-semibold leading-tight text-ink">MER Extendido</h2>
+		</header>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Relaciones reflexivas (o recursivas) y roles</h2>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">¿Qué es una relación reflexiva?</p>
+				<p class="text-muted max-w-3xl">
+					Es una relación donde <strong class="text-ink font-medium">una entidad se relaciona consigo misma</strong>: ambas participantes de la relación son la misma entidad, pero jugando <strong class="text-ink font-medium">papeles (roles) distintos</strong>.
+				</p>
+				<p class="text-muted max-w-3xl">
+					Se dibuja igual que cualquier relación (diamante), pero <strong class="text-ink font-medium">las dos líneas que conectan el diamante salen de la misma entidad</strong>, y cada línea se etiqueta con el <strong class="text-ink font-medium">rol</strong> que juega la entidad en esa conexión.
+				</p>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Ejemplo clásico: <code>EMPLEADO</code> — "Supervisa"</p>
+				<pre><code>{`                    Supervisa
+        ┌──────────────◇──────────────┐
+        │                              │
+   (rol: supervisor)            (rol: supervisado)
+        │                              │
+        └──────────► EMPLEADO ◄────────┘`}</code></pre>
+			</div>
+
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Un empleado puede supervisar a otros empleados.</li>
+				<li>Un empleado (el supervisado) tiene un solo supervisor.</li>
+				<li>Cardinalidad típica: <strong class="text-ink font-medium">1:N</strong> (un supervisor → muchos supervisados).</li>
+				<li>Sin los roles ("supervisor" / "supervisado") sería ambiguo cuál es cuál.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Límites de cardinalidad</h2>
+			<p class="text-muted max-w-3xl">
+				Se pueden expresar límites de cardinalidad: por ejemplo, un estudiante solo puede tener 6 materias inscritas (un límite máximo de cosas que puede tener), o el límite de matrimonios que puede contraer una persona — generalmente, 1 matrimonio por persona.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Especialización / Generalización</h2>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">¿Qué es?</p>
+				<p class="text-muted max-w-3xl">
+					Es cuando una entidad (<strong class="text-ink font-medium">superclase</strong>) tiene subtipos (<strong class="text-ink font-medium">subclases</strong>) que comparten los atributos de la superclase, pero además tienen atributos propios y específicos. El atributo clave lo tiene la entidad superior.
+				</p>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li><code>PERSONA</code> → superclase</li>
+					<li><code>ESTUDIANTE</code> y <code>EMPLEADO</code> → subclases (ambas "ES-UN" <code>PERSONA</code>)</li>
+				</ul>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Cómo se representa en notación Chen</p>
+				<pre><code>{`                    PERSONA ← supertipo
+                       │
+                       ▽  ← triángulo al revés (símbolo ISA / "es-un")
+                    ╱     ╲
+              ESTUDIANTE  EMPLEADO`}</code></pre>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li>La superclase <code>PERSONA</code> va arriba con sus atributos comunes (nombre, cédula, fecha_nacimiento, etc.).</li>
+					<li>El triángulo con la etiqueta <strong class="text-ink font-medium">"ISA"</strong> (o "ES-UN") conecta la superclase con las subclases.</li>
+					<li>
+						Cada subclase tiene <strong class="text-ink font-medium">sus propios atributos exclusivos</strong>:
+						<ul class="list-disc pl-5 mt-1.5 space-y-1.5">
+							<li><code>ESTUDIANTE</code>: código_estudiantil, programa, semestre</li>
+							<li><code>EMPLEADO</code>: salario, cargo, fecha_ingreso</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Restricción de exclusividad</p>
+				<p class="text-muted max-w-3xl">
+					Significa que una instancia de la superclase <strong class="text-ink font-medium">solo puede pertenecer a UNA subclase, nunca a varias al mismo tiempo</strong>.
+				</p>
+				<p class="text-muted max-w-3xl">
+					<strong class="text-ink font-medium">Disjunta / exclusiva (d):</strong> una persona es estudiante <strong class="text-ink font-medium">o</strong> empleado, nunca ambas.
+				</p>
+				<pre><code>{`                    PERSONA
+                       │
+                     △ (d)  ← "d" = disjunta / exclusiva
+                    ╱     ╲
+              ESTUDIANTE  EMPLEADO`}</code></pre>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Agregación</h2>
+			<p class="text-muted max-w-3xl">
+				La agregación es un concepto especial en ER que permite <strong class="text-ink font-medium">tratar una relación completa (entidad + relación + entidad) como si fuera una entidad</strong>, para poder relacionarla a su vez con una tercera entidad.
+			</p>
+			<p class="text-muted max-w-3xl">
+				Resuelve un problema concreto: <strong class="text-ink font-medium">no se puede conectar un diamante (relación) directamente a otro diamante (relación)</strong> en Chen puro. Si necesitas que una relación M:N se relacione con una tercera entidad, usas agregación.
+			</p>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">El problema que resuelve</p>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li><code>JUGADORES</code> participa_en <code>PARTIDOS</code> (relación M:N)</li>
+					<li>Y ahora necesitas registrar qué <code>ARBITRO</code> supervisó esa participación específica (jugador + partido)</li>
+				</ul>
+				<p class="text-muted max-w-3xl">
+					Sin agregación, tendrías que conectar el <code>ARBITRO</code> directamente al diamante "participa_en" — <strong class="text-ink font-medium">eso no es válido en Chen puro</strong>.
+				</p>
+			</div>
+
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Cómo se representa</p>
+				<p class="text-muted max-w-3xl">
+					Se dibuja un <strong class="text-ink font-medium">rectángulo punteado (o de línea doble delgada) que envuelve</strong> a las dos entidades y el diamante de la relación original. Ese rectángulo completo actúa como una "súper-entidad" que luego se conecta con un diamante normal a la tercera entidad.
+				</p>
+				<pre><code>{`┌─────────────────────────────────┐
+│  JUGADORES ──◇── PARTIDOS        │
+│         (participa_en)           │
+└─────────────────┬─────────────────┘
+                   │
+                   ◇  Supervisa
+                   │
+               ARBITROS`}</code></pre>
+			</div>
+		</article>
+	</section>
+</PageLayout>
+
+<style>
+	.lead {
+		border-left: 2px solid var(--color-border);
+		padding-left: 1rem;
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.15em 0.4em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+
+	pre {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.78rem;
+		line-height: 1.7;
+		overflow-x: auto;
+		padding: 1rem 1.25rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklab, var(--color-ink) 3%, var(--color-surface));
+	}
+
+	pre code {
+		background: none;
+		padding: 0;
+		font-size: 1em;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+
+	th,
+	td {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	th {
+		color: var(--color-ink);
+		font-weight: 600;
+	}
+
+	td {
+		color: var(--color-muted);
+	}
+</style>

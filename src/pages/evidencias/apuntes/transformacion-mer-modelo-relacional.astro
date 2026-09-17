@@ -1,0 +1,180 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+
+const reglasTransformar = [
+	{ num: 3, titulo: 'Toda entidad es una tabla', desc: 'La clave del MER se vuelve la clave primaria de la tabla. Es la regla más simple y se aplica primero, antes que las relaciones.' },
+	{ num: 4, titulo: 'Relación 1:1, participación total en ambos lados', desc: 'Lo recomendado es fusionar en una sola tabla (si ninguna fila puede existir sin la otra, fusionar no pierde información). Alternativa: dos tablas con la misma clave; se separan solo por razones de peso (muchos atributos, accesos distintos, seguridad).' },
+	{ num: 5, titulo: 'Relación 1:1, participación parcial', desc: 'La clave se propaga hacia el lado obligatorio, para que nunca quede nula. Si ambos lados son parciales, conviene una tercera tabla con las dos claves.' },
+	{ num: 6, titulo: 'Relación 1:N, lado "muchos" obligatorio', desc: 'Es el caso más frecuente. La clave del lado "uno" viaja al lado "muchos" (no se crea tabla nueva, basta una columna). Si la relación tiene atributos propios, también viajan a la tabla del lado "muchos".' },
+	{ num: 7, titulo: 'Relación 1:N, participación parcial en ambos lados', desc: 'Propagar la clave llenaría de nulos, así que la relación pasa a ser tabla propia, con la clave del lado "uno" como atributo.' },
+	{ num: 8, titulo: 'Relación N:M', desc: 'Siempre nace una tabla nueva, sin excepción. La clave primaria es la combinación de las dos claves; los atributos de la relación viven ahí y en ningún otro sitio. Si la misma pareja puede repetirse en el tiempo, hay que añadir la fecha a la clave.' },
+	{ num: 9, titulo: 'Relaciones n-arias', desc: 'Se convierte en una tabla con las claves de las n entidades. Si alguna cardinalidad fuera 1, esa clave sale de la clave primaria y queda como columna normal.' },
+	{ num: 10, titulo: 'Reflexivas y roles', desc: 'Se transforma igual que cualquier otra relación; lo único distinto es que las dos claves vienen de la misma tabla, por eso los roles (ej. continente/contenido) pasan a ser los nombres de las columnas.' },
+	{ num: 11, titulo: 'Generalización / especialización', desc: 'Si la jerarquía es total y disjunta, desaparece el supertipo y sus atributos bajan a cada subtipo, que heredan también su clave. Las relaciones en que participaba el supertipo se propagan a los subtipos.' },
+];
+
+const jerarquias = [
+	{ nombre: 'Una tabla por subtipo', desc: 'Desaparece el supertipo. Sirve si es total y disjunta.', ventaja: 'Sin columnas vacías', desventaja: 'Listar todo requiere unir tablas' },
+	{ nombre: 'Una sola tabla para todo', desc: 'El supertipo absorbe los atributos de los subtipos + columna "tipo". Es la única viable si es solapada.', ventaja: 'Sin uniones para listar todo', desventaja: 'Genera muchos nulos' },
+	{ nombre: 'Supertipo + subtipos (tres tablas)', desc: 'La más fiel al modelo, mejor para jerarquías parciales.', ventaja: 'Fiel al modelo original', desventaja: 'Cuesta una unión en cada consulta' },
+];
+
+const cuadroDecision = [
+	{ situacion: 'Multivalorado', transformacion: 'Entidad nueva + relación (normalmente N:M)' },
+	{ situacion: 'Compuesto', transformacion: 'Se reemplaza por sus hojas' },
+	{ situacion: 'Derivado', transformacion: 'Se elimina' },
+	{ situacion: 'Entidad', transformacion: 'Tabla con su clave primaria' },
+	{ situacion: '1:1 ambos obligatorios', transformacion: 'Una sola tabla' },
+	{ situacion: '1:1 un lado opcional', transformacion: 'Clave viaja al lado obligatorio' },
+	{ situacion: '1:N "muchos" obligatorio', transformacion: 'Clave del "uno" viaja al "muchos"' },
+	{ situacion: '1:N ambos opcionales', transformacion: 'Tabla propia, clave del lado "uno"' },
+	{ situacion: 'N:M', transformacion: 'Tabla propia con las dos claves' },
+	{ situacion: 'n-aria', transformacion: 'Tabla propia con las n claves' },
+	{ situacion: 'Reflexiva', transformacion: 'Igual que binaria; roles nombran columnas' },
+	{ situacion: 'Jerarquía', transformacion: 'Según total/parcial, disjunta/solapada' },
+];
+
+const erroresFrecuentes = [
+	'Poner la clave en el lado equivocado de una 1:N (siempre va en el lado "muchos", no se negocia).',
+	'Propagar una clave en una N:M (ahí no cabe, una columna no admite varios valores).',
+	'Olvidar los atributos de la relación al crear tablas (van con la tabla de la relación, no con las entidades).',
+	'Dejar incompleta la clave primaria de una tabla N:M (son las dos claves, no una).',
+	'No declarar como obligatorios los atributos clave que vienen de una participación total.',
+	'Transformar una jerarquía sin decir qué estrategia se usó y por qué.',
+];
+---
+
+<PageLayout title="Transformación del MER al Modelo Relacional · Apuntes" description="Apunte sobre las reglas para transformar el modelo entidad relación en el modelo relacional.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Transformación del MER al Modelo Relacional</h1>
+		<p class="text-muted max-w-2xl">Reglas mecánicas para pasar de entidades y relaciones del MER a tablas del modelo relacional.</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">1. De qué se trata</h2>
+			<p class="text-muted max-w-3xl">El MER describe el mundo (negocio); el modelo relacional describe tablas.</p>
+			<p class="lead max-w-3xl">
+				Pasar de uno a otro <strong class="text-ink">no es traducir dibujos, es aplicar reglas mecánicas</strong>: si el MER está bien hecho, la transformación no admite discusión, sale una única respuesta correcta.
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Orden de trabajo:</strong> primero se simplifica el modelo (fuera multivalorados, compuestos y derivados), después se transforma cada entidad y relación según su cardinalidad, y al final se revisan jerarquías, reflexivas y n-arias.</li>
+				<li><strong class="text-ink font-medium">Notación usada:</strong> <code>TABLA</code> (atributo clave subrayado; el atributo clave que pertenece a otra relación va en color distinto/naranja).</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">2. Fase 1 — Simplificar el MER</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Atributos multivalorados:</strong> se eliminan convirtiéndose en una entidad nueva (ej. <code>AUTOR</code> de un <code>LIBRO</code>), relacionada normalmente N:M.</li>
+				<li><strong class="text-ink font-medium">Atributos compuestos:</strong> se reemplazan por sus componentes simples; la elipse padre desaparece y sobreviven solo las hojas (si hay varios niveles, se baja hasta el final: nombre_completo → apellidos → apellido_1, apellido_2).</li>
+				<li><strong class="text-ink font-medium">Atributos derivados:</strong> no se almacenan, simplemente desaparecen (se calculan al consultar, como la edad).</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">3. Fase 2 — Transformar</h2>
+			<p class="lead max-w-3xl">
+				La pregunta clave que decide casi todo: ¿la relación obliga a que cada ejemplar participe? La <strong class="text-ink">participación mínima</strong> —el 0 o el 1 del par (min, max)— determina si la clave se propaga o si hace falta una tabla aparte.
+			</p>
+
+			<div class="divide-y divide-border">
+				{reglasTransformar.map((regla) => (
+					<div class="py-3 first:pt-0 last:pb-0 space-y-1">
+						<p class="text-ink font-semibold">
+							<span class="inline-flex items-center rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs font-mono font-medium text-muted mr-2 align-middle">Regla {regla.num}</span>
+							{regla.titulo}
+						</p>
+						<p class="text-muted max-w-3xl">{regla.desc}</p>
+					</div>
+				))}
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">4. Jerarquías: las tres estrategias</h2>
+			<div class="space-y-3">
+				{jerarquias.map((estrategia, i) => (
+					<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-1.5">
+						<p class="text-ink font-semibold">{i + 1}. {estrategia.nombre}</p>
+						<p class="text-muted">{estrategia.desc}</p>
+						<p class="text-sm text-muted"><strong class="text-ink font-medium">Ventaja:</strong> {estrategia.ventaja}. <strong class="text-ink font-medium">Desventaja:</strong> {estrategia.desventaja}.</p>
+					</div>
+				))}
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">5. Cuadro de decisión (resumen rápido)</h2>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>
+							<th>Situación</th>
+							<th>Transformación</th>
+						</tr>
+					</thead>
+					<tbody>
+						{cuadroDecision.map((row) => (
+							<tr>
+								<td class="text-ink font-medium whitespace-nowrap">{row.situacion}</td>
+								<td>{row.transformacion}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">6. Errores frecuentes</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				{erroresFrecuentes.map((error) => <li>{error}</li>)}
+			</ul>
+		</article>
+	</section>
+</PageLayout>
+
+<style>
+	.lead {
+		border-left: 2px solid var(--color-border);
+		padding-left: 1rem;
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.15em 0.4em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+
+	th,
+	td {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	th {
+		color: var(--color-ink);
+		font-weight: 600;
+	}
+
+	td {
+		color: var(--color-muted);
+	}
+</style>
