@@ -30,5 +30,77 @@ import BackLink from '../../components/BackLink.astro';
 				/>
 			</div>
 		</article>
+
+		<article class="card space-y-4 mt-6">
+			<h2 class="text-xl font-semibold text-ink">MER Aerolínea</h2>
+			<p class="text-muted max-w-3xl">
+				Una aerolínea requiere una base de datos relacional para registrar sus operaciones. Las características del negocio son las siguientes:
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>La aerolínea tiene tres recursos principales: aviones, pilotos y tripulación.</li>
+				<li>Los aviones tienen un código (número de cola), un tipo de avión y una base a donde pertenece y debe regresar cada número de horas.</li>
+				<li>Los pilotos tienen un código, nombre y horas de vuelo.</li>
+				<li>Los miembros de la tripulación tienen un código, nombre y teléfonos.</li>
+				<li>Pilotos y tripulación tienen una base a la que regresan después de cada jornada.</li>
+				<li>Los vuelos van desde un origen a un destino a una hora concreta y tiene un número de vuelo.</li>
+			</ul>
+			<div class="rounded-[calc(var(--radius-card)-4px)] border border-border bg-white p-4 overflow-x-auto">
+				<img
+					src="/evidencias/mer-aerolinea.png"
+					alt="Diagrama entidad-relación MER Aerolínea"
+					class="mx-auto min-w-150"
+				/>
+			</div>
+		</article>
+
+		<article class="card space-y-4 mt-6">
+			<p class="eyebrow m-0">Primer parcial — Punto 1</p>
+			<h2 class="text-xl font-semibold text-ink">MER Extendido CineAndes</h2>
+			<p class="text-muted max-w-3xl">
+				Modelado conceptual en notación de Peter Chen para CineAndes, una cadena de salas de cine, a partir de once reglas de negocio. El modelo integra:
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Entidades fuertes y débiles: SEDE; SALA (dependiente de SEDE); SILLA (dependiente de SALA); FUNCIÓN (dependiente de SALA).</li>
+				<li>Atributos compuestos: dirección, nombre completo.</li>
+				<li>Atributos multivaluados: teléfono, idioma.</li>
+				<li>Atributos derivados: edad, antigüedad.</li>
+				<li>Una relación N:M con atributos propios: COMPRA, entre CLIENTE y FUNCIÓN.</li>
+				<li>Dos relaciones recursivas: PELÍCULA, con roles secuela/precuela; y EMPLEADO, con roles supervisor/supervisado.</li>
+				<li>Una jerarquía total y disjunta: EMPLEADO especializado en PROYECCIONISTA y TAQUILLERO.</li>
+				<li>Una relación ternaria: PROVEEDOR–SEDE–PRODUCTO.</li>
+				<li>Una agregación: el medio de pago depende de la relación COMPRA, no de CLIENTE ni de FUNCIÓN por separado.</li>
+			</ul>
+			
+			<div class="rounded-[calc(var(--radius-card)-4px)] border border-border bg-white p-4 overflow-x-auto">
+				<img
+					src="/evidencias/parcial1-mer-cineandes.drawio.svg"
+					alt="Diagrama entidad-relación extendido MER CineAndes"
+					class="mx-auto min-w-150"
+				/>
+			</div>
+		</article>
+
+		<article class="card space-y-4 mt-6">
+			<p class="eyebrow m-0">Primer parcial — Punto 2</p>
+			<h2 class="text-xl font-semibold text-ink">Reducción a tablas: CineAndes</h2>
+			<p class="text-muted max-w-3xl">
+				Transformación del modelo conceptual (ya dado y validado) al modelo relacional, aplicando las reglas de reducción según el tipo de atributo, cardinalidad y participación de cada relación. Incluyó:
+			</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Eliminar atributos compuestos y multivaluados sustituyéndolos por sus componentes o por una entidad aparte, y descartar atributos derivados.</li>
+				<li>Construir la clave primaria de entidades débiles encadenadas: SALA hereda de SEDE, SILLA hereda a su vez de SALA, resultando en una clave compuesta de tres niveles.</li>
+				<li>Convertir la relación N:M COMPRA en tabla propia con los atributos cantidad_boletas y canal.</li>
+				<li>Transformar la relación ternaria ENTREGA (M:N:N) en una tabla cuya clave primaria combina los tres identificadores.</li>
+				<li>Resolver la agregación PAGA_CON apoyando la clave foránea hacia MEDIO_PAGO sobre la tabla resultante de COMPRA, por ser esa la entidad que representa el hecho que se paga.</li>
+				<li>Proponer dos estrategias de transformación para la jerarquía total y disjunta de EMPLEADO: una tabla por subtipo vs. tabla única con discriminador.</li>
+			</ul>
+			<div class="rounded-[calc(var(--radius-card)-4px)] border border-border bg-white p-4 overflow-x-auto">
+				<img
+					src="/evidencias/parcial1-reduccion-tablas-cineandes.drawio.svg"
+					alt="Diagrama de reducción a tablas del modelo relacional de CineAndes"
+					class="mx-auto min-w-150"
+				/>
+			</div>
+		</article>
 	</section>
 </PageLayout>
