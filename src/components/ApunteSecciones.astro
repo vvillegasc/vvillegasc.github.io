@@ -1,0 +1,102 @@
+---
+// Muestra las secciones de un apunte escrito en Markdown: cada sección en su propio cuadro numerado,
+// con el mismo estilo que los apuntes hechos a mano (texto gris, negritas en color principal, tablas finas).
+interface Props {
+	secciones: { frontmatter: { title: string }; Content: any }[];
+}
+
+const { secciones } = Astro.props;
+---
+
+<section class="content-shell pb-16 space-y-6">
+	{secciones.map(({ frontmatter, Content }, i) => (
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">{i + 1}. {frontmatter.title}</h2>
+			<div class="apunte">
+				<Content />
+			</div>
+		</article>
+	))}
+</section>
+
+<style>
+	.apunte {
+		color: var(--color-muted);
+		/* Si una tabla no cabe (pantallas angostas), se desplaza de lado sin romper el texto. */
+		overflow-x: auto;
+	}
+
+	.apunte :global(> * + *) {
+		margin-top: 0.75rem;
+	}
+
+	.apunte :global(p),
+	.apunte :global(ul),
+	.apunte :global(ol) {
+		margin-bottom: 0;
+	}
+
+	.apunte :global(h3) {
+		margin-top: 1.75rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--color-ink);
+	}
+
+	.apunte :global(strong) {
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	.apunte :global(ul) {
+		list-style: disc;
+		padding-left: 1.25rem;
+	}
+
+	.apunte :global(li + li) {
+		margin-top: 0.375rem;
+	}
+
+	.apunte :global(:not(pre) > code) {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.15em 0.4em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+
+	.apunte :global(pre) {
+		max-width: 100%;
+		overflow-x: auto;
+		padding: 1rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		font-size: 0.85rem;
+		line-height: 1.55;
+	}
+
+	.apunte :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+
+	.apunte :global(th),
+	.apunte :global(td) {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	.apunte :global(th) {
+		color: var(--color-ink);
+		font-weight: 600;
+	}
+
+	.apunte :global(td:first-child) {
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+</style>

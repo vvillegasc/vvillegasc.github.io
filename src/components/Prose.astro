@@ -2,10 +2,31 @@
 const { class: className = '' } = Astro.props;
 ---
 
-<article
-	class={
-		`prose prose-neutral dark:prose-invert max-w-none prose-headings:[color:var(--color-ink)] ${className}`.trim()
-	}
->
+<!--
+	Los colores de la tipografía salen de los tokens del sitio (--color-ink, --color-muted, --color-border)
+	para que sigan el tema elegido con el selector (claro / oscuro / azul) y no el modo del sistema operativo.
+-->
+<article class={`prose max-w-none site-prose ${className}`.trim()}>
 	<slot />
 </article>
+
+<style>
+	.site-prose {
+		--tw-prose-body: var(--color-muted);
+		--tw-prose-headings: var(--color-ink);
+		--tw-prose-lead: var(--color-muted);
+		--tw-prose-links: var(--color-ink);
+		--tw-prose-bold: var(--color-ink);
+		--tw-prose-counters: var(--color-muted);
+		--tw-prose-bullets: var(--color-border);
+		--tw-prose-hr: var(--color-border);
+		--tw-prose-quotes: var(--color-ink);
+		--tw-prose-quote-borders: var(--color-border);
+		--tw-prose-captions: var(--color-muted);
+		--tw-prose-code: var(--color-ink);
+		--tw-prose-pre-code: var(--color-ink);
+		--tw-prose-pre-bg: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		--tw-prose-th-borders: var(--color-border);
+		--tw-prose-td-borders: var(--color-border);
+	}
+</style>

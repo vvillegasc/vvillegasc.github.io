@@ -1,6 +1,13 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
 import BackLink from '../../components/BackLink.astro';
+import Prose from '../../components/Prose.astro';
+
+// Cada ejercicio vive en su propio .md; el prefijo numérico del archivo define el orden.
+const modulos = import.meta.glob('../../content/evidencias/normalizacion/*.md', { eager: true });
+const ejercicios = Object.keys(modulos)
+	.sort()
+	.map((ruta) => modulos[ruta] as { frontmatter: { title: string }; Content: any });
 ---
 
 <PageLayout title="Normalización · Evidencias" description="Evidencia de normalización de datos.">
@@ -8,6 +15,31 @@ import BackLink from '../../components/BackLink.astro';
 		<BackLink href="/evidencias" label="Volver a Evidencias" />
 		<p class="eyebrow m-0">Evidencias</p>
 		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Normalización</h1>
-		<p class="text-muted max-w-2xl">Próximamente. Aquí irán los ejercicios y evidencias de normalización (1FN, 2FN, 3FN...).</p>
+		<p class="text-muted max-w-2xl">Ejercicios del taller de normalización llevados paso a paso a 1FN, 2FN y 3FN.</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		{ejercicios.map(({ frontmatter, Content }) => (
+			<article class="card space-y-4">
+				<p class="eyebrow m-0">Taller de Normalización</p>
+				<h2 class="text-2xl font-semibold text-ink">{frontmatter.title}</h2>
+				<Prose class="ejercicio">
+					<Content />
+				</Prose>
+			</article>
+		))}
 	</section>
 </PageLayout>
+
+<style>
+	.ejercicio :global(> :first-child) {
+		margin-top: 0;
+	}
+	.ejercicio :global(h3) {
+		font-size: 1rem;
+	}
+	.ejercicio :global(table) {
+		display: block;
+		overflow-x: auto;
+	}
+</style>

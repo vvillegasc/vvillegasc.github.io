@@ -1,13 +1,44 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
 import BackLink from '../../components/BackLink.astro';
+
+// Cada consulta vive en su propio .md (src/content/evidencias/sql/NN.md); el número del archivo define el orden.
+const modulos = import.meta.glob('../../content/evidencias/sql/*.md', { eager: true });
+const consultas = Object.keys(modulos)
+	.sort()
+	.map((ruta) => modulos[ruta] as { frontmatter: { nivel: string; title: string }; Content: any });
 ---
 
-<PageLayout title="SQL · Evidencias" description="Evidencia de ejercicios SQL.">
+<PageLayout title="SQL · Evidencias" description="14 consultas SQL de práctica en Oracle sobre el esquema HR.">
 	<section class="content-shell py-12 space-y-4">
 		<BackLink href="/evidencias" label="Volver a Evidencias" />
 		<p class="eyebrow m-0">Evidencias</p>
 		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">SQL</h1>
-		<p class="text-muted max-w-2xl">Próximamente. Aquí irán las consultas y evidencias de práctica en SQL.</p>
+		<p class="text-muted max-w-2xl">14 consultas de práctica en Oracle sobre el esquema HR, de la más sencilla a la más difícil.</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		{consultas.map(({ frontmatter, Content }, i) => (
+			<article class="card space-y-4">
+				<p class="eyebrow m-0">{frontmatter.nivel}</p>
+				<h2 class="text-xl font-semibold text-ink">{i + 1}. {frontmatter.title}</h2>
+				<div class="consulta">
+					<Content />
+				</div>
+			</article>
+		))}
 	</section>
 </PageLayout>
+
+<style>
+	.consulta :global(pre) {
+		margin: 0;
+		max-width: 100%;
+		overflow-x: auto;
+		padding: 1rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		font-size: 0.85rem;
+		line-height: 1.55;
+	}
+</style>

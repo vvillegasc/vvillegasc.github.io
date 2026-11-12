@@ -1,0 +1,22 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ApunteSecciones from '../../../components/ApunteSecciones.astro';
+
+// Cada sección vive en su propio .md; el prefijo numérico del archivo define el orden.
+const modulos = import.meta.glob('../../../content/apuntes/sql/*.md', { eager: true });
+const secciones = Object.keys(modulos)
+	.sort()
+	.map((ruta) => modulos[ruta] as { frontmatter: { title: string }; Content: any });
+---
+
+<PageLayout title="SQL · Apuntes" description="Apunte de SQL estándar: DDL, DML, SELECT, funciones, agregación, JOINs, subconsultas, conjuntos y transacciones.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">SQL</h1>
+		<p class="text-muted max-w-2xl">SQL estándar, el que sirve en cualquier motor: definir la estructura, manipular y consultar datos, combinar tablas y controlar transacciones. Lo propio de Oracle está en el apunte de Oracle.</p>
+	</section>
+
+	<ApunteSecciones secciones={secciones} />
+</PageLayout>

@@ -1,0 +1,372 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+
+// Esquemas relacionales: "#atributo" = clave primaria (subrayada), "atributo^" = clave foránea (cursiva).
+type Atributo = { nombre: string; pk: boolean; fk: boolean };
+const esquema = (definicion: string) => {
+	const [, nombre, cuerpo] = definicion.match(/^(\w+)\((.*)\)$/)!;
+	const atributos: Atributo[] = cuerpo.split(',').map((a) => {
+		const t = a.trim();
+		return { nombre: t.replace(/^#|\^$/g, ''), pk: t.startsWith('#'), fk: t.endsWith('^') };
+	});
+	return { nombre, atributos };
+};
+
+const conceptosCols = ['Concepto', 'Qué es', 'Ejemplo'];
+const conceptos = [
+	['Clave primaria (PK)', 'Atributo o conjunto mínimo de atributos que identifica cada fila de forma única', 'id_orden en Ordenes'],
+	['Clave compuesta', 'PK formada por dos o más atributos', '(id_orden, num_art) en Articulos_ordenes'],
+	['Clave candidata', 'Cualquier combinación que podría ser PK; se escoge una', '(DNI, Fecha) y (Nombre, Fecha) en Turnos de trabajo'],
+	['Clave foránea (FK)', 'Atributo que referencia la PK de otra tabla', 'id_cliente en Ordenes'],
+	['Atributo clave / no clave', 'Clave: forma parte de alguna clave candidata. No clave: todos los demás', 'En Articulos_ordenes, cant es no clave'],
+	['Valor atómico', 'Un solo valor indivisible por celda', '"MySQL" sí; "MySQL, Python" no'],
+];
+
+const tiposDependencia = [
+	{ term: 'Total (completa)', def: 'el atributo depende de toda la clave compuesta, no de una parte.', ej: '(id_orden, num_art) → cant', nota: 'la cantidad es de ese artículo en esa orden.' },
+	{ term: 'Parcial', def: 'el atributo depende solo de una parte de la clave compuesta.', ej: 'num_art → precio', nota: 'dentro de (id_orden, num_art). Rompe la 2FN.' },
+	{ term: 'Transitiva', def: 'un no clave depende de otro no clave.', ej: 'id_orden → id_cliente → nom_cliente', nota: 'Rompe la 3FN.' },
+];
+
+const anomaliasCols = ['Anomalía', 'Qué pasa', 'Ejemplo (tabla Ordenes sin normalizar)'];
+const anomalias = [
+	['Inserción', 'No se puede guardar un dato sin inventar otro', 'No se puede registrar un cliente nuevo hasta que haga una orden'],
+	['Borrado', 'Al borrar una fila se pierde información que no se quería borrar', 'Si se borra la orden 2302, se pierde que existe el cliente Herman y el artículo Paq-6'],
+	['Modificación', 'Un dato repetido en varias filas hay que cambiarlo en todas; si falta una, queda inconsistente', 'Si Martin cambia de estado, hay que cambiarlo en 3 filas'],
+];
+
+const pedidosCols = ['Número pedido', 'Fecha', 'Número cliente', 'Nombre cliente', 'Ciudad', 'Número producto', 'Producto', 'Cantidad', 'Precio'];
+const pedidos = [
+	['100', '04/03/06', '1001', 'A', 'Bogotá', '10, 12, 15', 'Raqueta, Malla, Pelota', '2, 1, 5', '40000, 15000, 50000'],
+	['101', '05/03/06', '1010', 'B', 'Bogotá', '30', 'Balón', '1', '100000'],
+	['102', '06/03/06', '1030', 'C', 'Bogotá', '12, 20', 'Malla, Careta', '2, 2', '15000, 35000'],
+];
+
+const formasNormales = [
+	{
+		titulo: '6. Primera Forma Normal (1FN)',
+		regla: 'todos los atributos tienen valores atómicos y no hay grupos repetidos.',
+		detectar: 'una celda con varios valores ("Raqueta, Malla, Pelota"), columnas numeradas (materia_1, materia_2), o un conjunto de columnas que se repite por cada elemento (los productos de un pedido).',
+		corregir: 'se saca el grupo repetido a una tabla nueva que lleva la PK de la tabla base más la clave del grupo.',
+		aplicado: null,
+		resultado: [
+			'Pedido(#Numero_pedido, Fecha, Numero_cliente, Nombre_cliente, Ciudad)',
+			'Pedido_Producto(#Numero_pedido, #Numero_producto, Producto, Cantidad, Precio)',
+		],
+	},
+	{
+		titulo: '7. Segunda Forma Normal (2FN)',
+		regla: 'está en 1FN y cada atributo no clave depende de la clave primaria completa.',
+		detectar: 'solo puede fallar si la PK es compuesta. Para cada no clave se pregunta: ¿depende de toda la clave o me basta una parte? Una tabla con PK simple en 1FN ya está en 2FN.',
+		corregir: 'los atributos con dependencia parcial salen a una tabla cuya PK es la parte de la clave de la que dependen.',
+		aplicado: 'En Pedido_Producto, Producto y Precio dependen solo de Numero_producto; Cantidad sí depende de los dos.',
+		resultado: [
+			'Pedido(#Numero_pedido, Fecha, Numero_cliente, Nombre_cliente, Ciudad)',
+			'Producto(#Numero_producto, Producto, Precio)',
+			'Pedido_Producto(#Numero_pedido, #Numero_producto, Cantidad)',
+		],
+	},
+	{
+		titulo: '8. Tercera Forma Normal (3FN)',
+		regla: 'está en 2FN y ningún atributo no clave depende de otro atributo no clave (no hay dependencias transitivas).',
+		detectar: 'se buscan grupos de columnas que "hablan" de otra cosa distinta a la PK, normalmente identificada por un código que no es clave (número de cliente, código de ciudad, DNI del monitor).',
+		corregir: 'esos atributos salen a una tabla cuya PK es el atributo no clave del que dependen; en la tabla original él se queda como FK.',
+		aplicado: 'En Pedido, Nombre_cliente y Ciudad dependen de Numero_cliente, no del pedido.',
+		resultado: [
+			'Pedido(#Numero_pedido, Fecha, Numero_cliente^)',
+			'Cliente(#Numero_cliente, Nombre_cliente, Ciudad)',
+			'Producto(#Numero_producto, Producto, Precio)',
+			'Pedido_Producto(#Numero_pedido^, #Numero_producto^, Cantidad)',
+		],
+	},
+].map((fn) => ({ ...fn, resultado: fn.resultado.map(esquema) }));
+
+const resumenCols = ['Forma', 'Pregunta para revisarla', 'Si falla'];
+const resumen = [
+	['1FN', '¿Hay celdas con varios valores o grupos que se repiten?', 'Grupo repetido a tabla nueva con la PK base'],
+	['2FN', '¿Algún no clave depende solo de una parte de la PK compuesta?', 'Ese atributo a una tabla con esa parte como PK'],
+	['3FN', '¿Algún no clave depende de otro no clave?', 'Ese atributo a una tabla con el otro no clave como PK'],
+];
+
+const masAllaCols = ['Forma', 'Regla', 'Cuándo aparece'];
+const masAlla = [
+	['FNBC (Boyce-Codd)', 'Todo determinante (lo que está a la izquierda de una DF) es clave candidata', 'Una versión más estricta de 3FN. Falla cuando hay varias claves candidatas compuestas que se solapan y un atributo clave depende de algo que no es clave candidata'],
+	['4FN', 'Cumple FNBC y no tiene dependencias multivaluadas independientes; según las diapositivas, los campos multivaluados se identifican por una clave única', 'Una tabla guarda dos listas independientes de la misma entidad (materias y hobbies de un alumno)'],
+	['5FN', 'Cumple 4FN y no se puede descomponer más sin perder información al volver a unir (dependencias de reunión)', 'Casos raros con relaciones de tres o más entidades'],
+];
+
+const metodo = [
+	'Escribe la relación inicial con todos sus atributos.',
+	'Lista las dependencias funcionales. Si hay tabla con datos, compruébalas con los valores que se repiten. Si el enunciado da supuestos ("los nombres no son únicos"), respétalos.',
+	'Encuentra la clave: la combinación mínima de atributos que no se repite en ninguna fila y que determina a todos los demás.',
+	'1FN: separa valores no atómicos y grupos repetidos.',
+	'2FN: en cada tabla con PK compuesta, saca lo que depende de una sola parte.',
+	'3FN: en cada tabla, saca lo que depende de otro no clave.',
+	'Escribe el resultado final marcando PK y FK, y justifica cada paso en una o dos frases.',
+];
+
+const errores = [
+	{ nombre: 'Decir que una tabla con PK simple no está en 2FN', desc: 'la 2FN solo puede fallar con clave compuesta.' },
+	{ nombre: 'Confundir parcial con transitiva', desc: 'parcial: depende de una parte de la clave. Transitiva: depende de un atributo que no es clave.' },
+	{ nombre: 'Usar nombres como clave', desc: 'los nombres se repiten; mejor un código (cod_docente en vez de nombre_docente).' },
+	{ nombre: 'Perder la relación entre tablas', desc: 'al separar, el atributo del que dependían los datos se queda en la tabla original como FK.' },
+	{ nombre: 'Asumir dependencias que los datos contradicen', desc: 'si un mismo X aparece con dos Y distintos, X no determina Y.' },
+	{ nombre: 'No justificar', desc: 'en los talleres se pide explicar por qué se separa cada tabla, no solo el resultado.' },
+];
+---
+
+<PageLayout title="Normalización · Apuntes" description="Apunte sobre normalización: dependencias funcionales, anomalías, 1FN, 2FN, 3FN y formas superiores.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Normalización</h1>
+		<p class="text-muted max-w-2xl">Dependencias funcionales, anomalías, las tres formas normales, lo que viene después de 3FN y un método para resolver ejercicios.</p>
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">1. Qué es la normalización</h2>
+			<p class="text-muted max-w-3xl">
+				La normalización es aplicar una serie de reglas (<strong class="text-ink font-medium">formas normales</strong>) a las tablas de un modelo relacional para eliminar datos repetidos y evitar inconsistencias. Una relación está en una forma normal si cumple el conjunto de restricciones que esa regla impone.
+			</p>
+			<p class="text-muted max-w-3xl">
+				Las formas normales son <strong class="text-ink font-medium">acumulativas</strong>: para estar en 2FN hay que estar en 1FN, y para estar en 3FN hay que estar en 2FN. En la práctica, llegar a 3FN es suficiente para la mayoría de las bases de datos.
+			</p>
+			<p class="lead max-w-3xl">
+				Lo que se gana: cada dato se guarda en un solo lugar, así que cambiarlo, borrarlo o insertarlo no deja la base en un estado contradictorio.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">2. Conceptos base</h2>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>{conceptosCols.map((col) => <th>{col}</th>)}</tr>
+					</thead>
+					<tbody>
+						{conceptos.map(([concepto, que, ejemplo]) => (
+							<tr>
+								<td class="text-ink font-medium">{concepto}</td>
+								<td>{que}</td>
+								<td>{ejemplo}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">3. Dependencia funcional (DF)</h2>
+			<p class="lead max-w-3xl">
+				<code>X → Y</code> se lee "X determina a Y": para cada valor de X hay un solo valor de Y.
+			</p>
+			<p class="text-muted max-w-3xl">
+				Ejemplo: <code>num_art → nom_art</code>, porque el artículo 4011 siempre es "Raqueta". Hay tres tipos que importan para normalizar:
+			</p>
+			<dl class="grid gap-3 sm:grid-cols-3">
+				{tiposDependencia.map(({ term, def, ej, nota }) => (
+					<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2">
+						<dt class="text-ink font-semibold">{term}</dt>
+						<dd class="text-muted m-0 space-y-2">
+							<p class="m-0">{def}</p>
+							<p class="m-0"><code>{ej}</code> {nota}</p>
+						</dd>
+					</div>
+				))}
+			</dl>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Truco para encontrar DF en una tabla con datos</p>
+				<p class="text-muted max-w-3xl">
+					Si cada vez que se repite el valor de X también se repite el mismo valor de Y, probablemente X → Y. Si X se repite con dos valores distintos de Y, seguro que X no determina Y.
+				</p>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">4. Anomalías</h2>
+			<p class="text-muted max-w-3xl">
+				Una tabla sin normalizar mezcla datos de varias "cosas" (clientes, productos, órdenes) en las mismas filas. Eso causa tres problemas:
+			</p>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>{anomaliasCols.map((col) => <th>{col}</th>)}</tr>
+					</thead>
+					<tbody>
+						{anomalias.map(([nombre, que, ejemplo]) => (
+							<tr>
+								<td class="text-ink font-medium">{nombre}</td>
+								<td>{que}</td>
+								<td>{ejemplo}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p class="text-muted max-w-3xl">
+				En los ejercicios, para dar un ejemplo de anomalía se busca un valor que aparezca <strong class="text-ink font-medium">una sola vez</strong> (para borrado) o <strong class="text-ink font-medium">varias veces</strong> (para modificación).
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">5. Ejemplo de clase: pedidos sin normalizar</h2>
+			<p class="text-muted max-w-3xl">
+				Tabla de las diapositivas que se usa en las tres formas normales siguientes. Fíjate en las celdas con varios valores del pedido 100 y 102.
+			</p>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>{pedidosCols.map((col) => <th class="whitespace-nowrap">{col}</th>)}</tr>
+					</thead>
+					<tbody>
+						{pedidos.map((fila) => (
+							<tr>{fila.map((celda) => <td class="whitespace-nowrap">{celda}</td>)}</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</article>
+
+		{formasNormales.map((fn) => (
+			<article class="card space-y-4">
+				<h2 class="text-xl font-semibold text-ink">{fn.titulo}</h2>
+				<p class="lead max-w-3xl">Regla: {fn.regla}</p>
+				<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+					<li><strong class="text-ink font-medium">Cómo detectarla:</strong> {fn.detectar}</li>
+					<li><strong class="text-ink font-medium">Cómo corregirla:</strong> {fn.corregir}</li>
+				</ul>
+				{fn.aplicado && <p class="text-muted max-w-3xl">{fn.aplicado}</p>}
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-2 overflow-x-auto">
+					{fn.resultado.map((r) => (
+						<p class="m-0 whitespace-nowrap">
+							<code>{r.nombre}({r.atributos.map((a, i) => <>{i > 0 && ', '}{a.fk ? <em>{a.pk ? <u>{a.nombre}</u> : a.nombre}</em> : a.pk ? <u>{a.nombre}</u> : a.nombre}</>)})</code>
+						</p>
+					))}
+				</div>
+			</article>
+		))}
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">9. Resumen rápido</h2>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>{resumenCols.map((col) => <th>{col}</th>)}</tr>
+					</thead>
+					<tbody>
+						{resumen.map(([forma, pregunta, siFalla]) => (
+							<tr>
+								<td class="text-ink font-medium whitespace-nowrap">{forma}</td>
+								<td>{pregunta}</td>
+								<td>{siFalla}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<p class="lead max-w-3xl">
+				Para memorizar: cada atributo no clave depende "de la clave, de toda la clave y nada más que de la clave" (1FN, 2FN y 3FN).
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">10. Más allá de 3FN</h2>
+			<p class="text-muted max-w-3xl">Las diapositivas las dejan planteadas como preguntas; esto es lo esencial de cada una.</p>
+			<div class="overflow-x-auto">
+				<table>
+					<thead>
+						<tr>{masAllaCols.map((col) => <th>{col}</th>)}</tr>
+					</thead>
+					<tbody>
+						{masAlla.map(([forma, regla, cuando]) => (
+							<tr>
+								<td class="text-ink font-medium whitespace-nowrap">{forma}</td>
+								<td>{regla}</td>
+								<td>{cuando}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">3FN vs. FNBC</p>
+				<p class="text-muted max-w-3xl">
+					Casi toda tabla en 3FN también está en FNBC. Ejemplo típico donde no: <code>Clase(Alumno, Materia, Profesor)</code> con PK (Alumno, Materia), donde cada profesor dicta una sola materia (<code>Profesor → Materia</code>). Está en 3FN porque Materia es atributo clave, pero no en FNBC porque Profesor no es clave candidata. Se separa en (Profesor, Materia) y (Alumno, Profesor).
+				</p>
+			</div>
+			<div class="space-y-2">
+				<p class="text-sm font-medium text-ink">Ejemplo de 4FN en las diapositivas</p>
+				<p class="text-muted max-w-3xl">
+					Alumnos, cursos, materias y una tabla <code>materias_por_alumno(mpa_id, materia_id, alumno_id)</code>, para que cada materia se guarde una sola vez y se relacione con varios alumnos.
+				</p>
+			</div>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">11. Método para resolver un ejercicio</h2>
+			<ol class="text-muted max-w-3xl list-decimal pl-5 space-y-1.5">
+				{metodo.map((paso) => <li>{paso}</li>)}
+			</ol>
+			<p class="lead max-w-3xl">
+				Si preguntan "¿en qué forma normal está?", revisa en orden y para en la primera regla que falle: si falla 2FN, la respuesta es 1FN.
+			</p>
+		</article>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">12. Errores comunes</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				{errores.map((e) => (
+					<li><strong class="text-ink font-medium">{e.nombre}:</strong> {e.desc}</li>
+				))}
+			</ul>
+		</article>
+
+		<p class="text-sm text-muted">
+			Notación de los esquemas: clave primaria <u>subrayada</u>, clave foránea en <em>cursiva</em>.
+		</p>
+	</section>
+</PageLayout>
+
+<style>
+	.lead {
+		border-left: 2px solid var(--color-border);
+		padding-left: 1rem;
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	code {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.15em 0.4em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+	}
+
+	th,
+	td {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	th {
+		color: var(--color-ink);
+		font-weight: 600;
+	}
+
+	td {
+		color: var(--color-muted);
+	}
+</style>

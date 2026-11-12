@@ -1,0 +1,22 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ApunteSecciones from '../../../components/ApunteSecciones.astro';
+
+// Cada sección vive en su propio .md; el prefijo numérico del archivo define el orden.
+const modulos = import.meta.glob('../../../content/apuntes/oracle/*.md', { eager: true });
+const secciones = Object.keys(modulos)
+	.sort()
+	.map((ruta) => modulos[ruta] as { frontmatter: { title: string }; Content: any });
+---
+
+<PageLayout title="Oracle · Apuntes" description="Apunte de Oracle: esquema HR, tipos de datos, DDL, funciones, particularidades y diferencias con el SQL estándar.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/evidencias/apuntes" label="Volver a Apuntes" />
+		<p class="eyebrow m-0">Apuntes</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Oracle</h1>
+		<p class="text-muted max-w-2xl">Lo propio de Oracle y SQL Developer: el esquema HR, tipos de datos, funciones de texto, fecha y conversión, particularidades y en qué se diferencia del SQL estándar.</p>
+	</section>
+
+	<ApunteSecciones secciones={secciones} />
+</PageLayout>
