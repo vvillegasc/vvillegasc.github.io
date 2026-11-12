@@ -1,0 +1,131 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import Tabla from '../../../components/proyecto/Tabla.astro';
+import Figura from '../../../components/proyecto/Figura.astro';
+
+const tablas = [
+	['<code>staff</code>', '<code>id_usuario</code>', '—', 'Datos comunes del personal: nombres, correo único, contraseña (hash BCrypt), rol, 2FA.'],
+	['<code>administrador</code>', '<code>id_usuario</code>', '<code>staff</code>', 'Subtipo de staff (1:1).'],
+	['<code>mesero</code>', '<code>id_usuario</code>', '<code>staff</code>', 'Subtipo de staff (1:1) con su estado ACTIVO / INACTIVO.'],
+	['<code>cliente</code>', '<code>id_cliente</code>', '—', 'Nombre y apellido del comensal.'],
+	['<code>cliente_correo</code>', '<code>correo</code>', '<code>cliente</code>', 'Correos del cliente (atributo multivaluado).'],
+	['<code>cliente_telefono</code>', '<code>(telefono, cliente_id_cliente)</code>', '<code>cliente</code>', 'Teléfonos del cliente (atributo multivaluado).'],
+	['<code>mesa</code>', '<code>num_mesa</code>', '—', 'Capacidad y estado de la mesa.'],
+	['<code>categoria</code>', '<code>nombre_categoria</code>', '—', 'Agrupa los productos del menú.'],
+	['<code>producto</code>', '<code>id_producto</code>', '<code>categoria</code>', 'Precio, stock, disponibilidad e imagen.'],
+	['<code>reserva</code>', '<code>id_reserva</code>', '<code>cliente</code>, <code>mesa</code>', 'Fecha, hora, número de personas y estado.'],
+	['<code>pedido</code>', '<code>id_pedido</code>', '<code>cliente</code>, <code>mesa</code>, <code>staff</code>', 'Comanda servida en una mesa, con su estado.'],
+	['<code>detalle_pedido</code>', '<code>(pedido_id_pedido, producto_id_producto)</code>', '<code>pedido</code>, <code>producto</code>', 'Relación N:M pedido–producto con cantidad y precio unitario.'],
+	['<code>metodo_pago</code>', '<code>tipo</code>', '—', 'Catálogo: EFECTIVO, TARJETA, TRANSFERENCIA.'],
+	['<code>factura</code>', '<code>num_factura</code>', '<code>pedido</code> (UNIQUE)', 'Comprobante 1:1 del pedido: impuesto, propina y total.'],
+	['<code>pago</code>', '<code>id_pago</code>', '<code>factura</code>, <code>metodo_pago</code>', 'Cada abono a una factura; permite pagar con varios métodos.'],
+];
+---
+
+<PageLayout title="Diseño de la BD · Savana Data Coffee" description="Modelo entidad-relación, modelo relacional, normalización y diccionario de datos de Savana Data Coffee.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects/savana-data-coffee" label="Volver al proyecto" />
+		<p class="eyebrow m-0">Savana Data Coffee · Fase 1</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Diseño de la base de datos</h1>
+		<p class="text-muted max-w-2xl">
+			Del modelo conceptual al lógico: entidades y relaciones en notación de Chen, el modelo extendido, el paso a tablas,
+			la normalización hasta 3FN y el diccionario de datos.
+		</p>
+		<ProyectoNav actual="diseno" />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Modelo conceptual</p>
+			<h2 class="text-xl font-semibold text-ink">MER en notación Peter Chen</h2>
+			<p class="text-muted max-w-3xl">Las relaciones principales del negocio:</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Un miembro del staff atiende muchos pedidos; un cliente hace muchos pedidos y muchas reservas.</li>
+				<li>Una reserva y un pedido se asignan a una mesa; una mesa recibe muchas reservas y pedidos a lo largo del tiempo.</li>
+				<li>Un producto pertenece a una categoría; pedidos y productos se relacionan N:M a través del detalle.</li>
+				<li>Un pedido genera una única factura (1:1); una factura recibe muchos pagos y cada pago usa un método.</li>
+			</ul>
+			<Figura src="/projects/savana/mer-chen.png" alt="MER de Savana Data Coffee en notación Peter Chen" />
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Modelo conceptual</p>
+			<h2 class="text-xl font-semibold text-ink">MER extendido</h2>
+			<p class="text-muted max-w-3xl">
+				El personal se modeló como una jerarquía: <strong class="text-ink font-medium">STAFF</strong> es la superentidad con los
+				datos comunes (nombre, correo, contraseña, rol, fecha de ingreso) y se especializa en
+				<strong class="text-ink font-medium">ADMINISTRADOR</strong> y <strong class="text-ink font-medium">MESERO</strong>. Es una
+				especialización total y disjunta: todo el personal tiene exactamente uno de los dos roles, y solo el mesero tiene estado
+				(activo o inactivo).
+			</p>
+			<Figura src="/projects/savana/mer-extendido.png" alt="MER extendido de Savana Data Coffee" />
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Modelo conceptual</p>
+			<h2 class="text-xl font-semibold text-ink">MER en notación pata de gallina</h2>
+			<p class="text-muted max-w-3xl">El mismo modelo en notación Barker / Crow's Foot: las 12 entidades con sus atributos (<code>#</code> identificador, <code>*</code> obligatorio, <code>o</code> opcional) y las relaciones con pata de gallina en el lado "muchos".</p>
+			<Figura src="/projects/savana/mer-pata-de-gallina.png" alt="MER de Savana Data Coffee en notación pata de gallina" />
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Modelo lógico</p>
+			<h2 class="text-xl font-semibold text-ink">Modelo relacional</h2>
+			<p class="text-muted max-w-3xl">
+				El modelo final tiene 15 tablas. Las llaves foráneas siguen el patrón <code>&lt;tabla&gt;_&lt;columna&gt;</code>
+				(por ejemplo <code>cliente_id_cliente</code>), así se ve a qué tabla apunta cada una.
+			</p>
+			<Figura src="/projects/savana/modelo-relacional.png" alt="Modelo relacional de Savana Data Coffee" />
+			<Tabla columnas={['Tabla', 'Llave primaria', 'Referencia a', 'Qué guarda']} filas={tablas} />
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Modelo lógico</p>
+			<h2 class="text-xl font-semibold text-ink">Decisiones de diseño</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Jerarquía en tres tablas:</strong> <code>staff</code> con lo común y <code>administrador</code> / <code>mesero</code> con la misma llave. Así el estado solo existe donde aplica y no quedan columnas nulas.</li>
+				<li><strong class="text-ink font-medium">Contactos multivaluados en tablas aparte:</strong> correos y teléfonos del cliente van en <code>cliente_correo</code> y <code>cliente_telefono</code>. El correo es la llave, así un correo pertenece a un solo cliente.</li>
+				<li><strong class="text-ink font-medium">Precio congelado en el detalle:</strong> <code>detalle_pedido</code> guarda el precio unitario del momento del pedido, para que un cambio de precio no altere pedidos pasados.</li>
+				<li><strong class="text-ink font-medium">Factura 1:1 con el pedido:</strong> la FK <code>pedido_id_pedido</code> es UNIQUE en <code>factura</code>.</li>
+				<li><strong class="text-ink font-medium">Pagos múltiples:</strong> la factura no guarda el método; cada <code>pago</code> tiene su método y su monto, y la suma debe cuadrar con el total.</li>
+				<li><strong class="text-ink font-medium">Catálogos con llave natural:</strong> <code>categoria</code> y <code>metodo_pago</code> usan su nombre como llave; la FK de producto a categoría tiene <code>ON UPDATE CASCADE</code>.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Normalización</p>
+			<h2 class="text-xl font-semibold text-ink">Hasta Tercera Forma Normal</h2>
+			<Tabla
+				columnas={['Forma normal', 'Cómo se cumple en el modelo']}
+				filas={[
+					['1FN', 'No hay atributos multivaluados ni grupos repetitivos: los correos y teléfonos del cliente salieron a sus propias tablas y cada producto de un pedido es una fila de <code>detalle_pedido</code>.'],
+					['2FN', 'En <code>detalle_pedido</code>, cuya llave es compuesta, <code>cantidad</code> y <code>precio</code> dependen de la llave completa (ese producto en ese pedido). El nombre o la categoría del producto no están ahí, porque dependerían solo de una parte de la llave.'],
+					['3FN', 'No hay dependencias transitivas: la descripción de la categoría vive en <code>categoria</code> y no en <code>producto</code>; la factura no repite el cliente ni el mesero (se obtienen por el pedido), y el subtotal del pedido no se guarda: se calcula con sus detalles.'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Diccionario de datos</p>
+			<h2 class="text-xl font-semibold text-ink">Ejemplo: tabla <code>factura</code></h2>
+			<p class="text-muted max-w-3xl">
+				El diccionario documenta cada columna de las 15 tablas con su tipo, restricciones, valor por defecto y descripción.
+				Así queda, por ejemplo, la tabla de facturas:
+			</p>
+			<Tabla
+				columnas={['Columna', 'Tipo', 'Restricciones', 'Descripción']}
+				filas={[
+					['num_factura', 'VARCHAR(50)', 'PK', 'Número con formato <code>FAC-AAAA-NNNNN</code>.'],
+					['pedido_id_pedido', 'BIGINT', 'NOT NULL, UNIQUE, FK → pedido', 'Pedido facturado (relación 1:1).'],
+					['fecha', 'TIMESTAMP', 'NOT NULL, DEFAULT CURRENT_TIMESTAMP', 'Momento de emisión.'],
+					['estado', 'VARCHAR(30)', 'NOT NULL, DEFAULT \'PAGADA\'', 'EMITIDA, PAGADA o ANULADA.'],
+					['propina', 'DOUBLE', 'NOT NULL, DEFAULT 0', 'Propina voluntaria.'],
+					['impuesto', 'DOUBLE', 'NOT NULL, DEFAULT 0', 'IVA del 19 % sobre el subtotal.'],
+					['total', 'DOUBLE', 'NOT NULL', 'Subtotal + impuesto + propina.'],
+				]}
+			/>
+		</article>
+	</section>
+</PageLayout>

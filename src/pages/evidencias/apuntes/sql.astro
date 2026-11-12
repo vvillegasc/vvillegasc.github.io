@@ -3,7 +3,6 @@ import PageLayout from '../../../layouts/PageLayout.astro';
 import BackLink from '../../../components/BackLink.astro';
 import ApunteSecciones from '../../../components/ApunteSecciones.astro';
 
-// Cada sección vive en su propio .md; el prefijo numérico del archivo define el orden.
 const modulos = import.meta.glob('../../../content/apuntes/sql/*.md', { eager: true });
 const secciones = Object.keys(modulos)
 	.sort()

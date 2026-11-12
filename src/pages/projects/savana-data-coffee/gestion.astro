@@ -1,0 +1,128 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import Tabla from '../../../components/proyecto/Tabla.astro';
+---
+
+<PageLayout title="Gestión · Savana Data Coffee" description="Gestión del proyecto Savana Data Coffee: Scrum, stakeholders, EDT, cronograma y presupuesto.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects/savana-data-coffee" label="Volver al proyecto" />
+		<p class="eyebrow m-0">Savana Data Coffee</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Gestión del proyecto</h1>
+		<p class="text-muted max-w-2xl">
+			Cómo se organizó el trabajo de tres personas durante el semestre: alcance, interesados, desglose del trabajo,
+			tiempos y costos. Mi rol aquí fue de gerente del proyecto y Scrum Master.
+		</p>
+		<ProyectoNav actual="gestion" />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Metodología</p>
+			<h2 class="text-xl font-semibold text-ink">Scrum en cuatro sprints</h2>
+			<p class="text-muted max-w-3xl">
+				Las tareas vivieron en un tablero de Notion. Cada sprint tuvo planeación, revisión y retrospectiva, y cada
+				entregable lo revisó un integrante distinto a su autor antes de cada entrega de fase.
+			</p>
+			<Tabla
+				columnas={['Sprint', 'Fechas', 'Enfoque']}
+				filas={[
+					['Sprint 0', '21 – 28 sep', 'Planeación: acta de constitución, stakeholders, EDT, cronograma y presupuesto.'],
+					['Sprint 1', '29 sep – 13 oct', 'Diseño y teoría relacional: propuesta, supuestos, MER, modelo relacional, normalización y álgebra.'],
+					['Sprint 2', '14 – 23 oct', 'Infraestructura y diseño de la app: VM, PostgreSQL, arquitectura y wireframes.'],
+					['Sprint 3', '24 oct – 6 nov', 'Datos y aplicación: scripts SQL, backend, frontend, pruebas, video y entrega final.'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Inicio</p>
+			<h2 class="text-xl font-semibold text-ink">Supuestos del proyecto</h2>
+			<p class="text-muted max-w-3xl">Las reglas de negocio que guiaron el modelo y el backend:</p>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li>Una sola sede, todo en pesos colombianos (COP).</li>
+				<li>El personal entra con correo y contraseña y su rol limita lo que puede hacer. Los clientes no tienen cuenta: se identifican por su correo y nunca se borran automáticamente.</li>
+				<li>Cada producto pertenece a una sola categoría y tiene un único precio vigente.</li>
+				<li>No hay pedidos para llevar: todo pedido se sirve en una mesa del salón.</li>
+				<li>Un pedido genera una única factura; se puede pagar combinando métodos, siempre que la suma cubra el 100 %. IVA del 19 % más propina voluntaria.</li>
+				<li>Restricciones técnicas: base de datos en una VM Linux local (sin Docker ni nube), cualquier RDBMS menos SQL Server, modelo en 3FN y backend en 3 capas con Spring Boot.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Inicio</p>
+			<h2 class="text-xl font-semibold text-ink">Identificación de stakeholders</h2>
+			<p class="text-muted max-w-3xl">
+				Se identificaron diez interesados en tres grupos (académicos e internos, técnicos y funcionales) y se
+				clasificaron por poder e interés para decidir cuánta atención necesitaba cada uno.
+			</p>
+			<Tabla
+				columnas={['Poder / interés', 'Stakeholders', 'Estrategia']}
+				filas={[
+					['Alto / alto', 'Docente, equipo de trabajo, administrador de la cafetería, administrador de BD, desarrollador backend', 'Gestionar de cerca y validar avances.'],
+					['Alto / medio', 'Universidad El Bosque', 'Mantener satisfecha con entregables y evidencias.'],
+					['Medio / alto', 'Empleado, cajero y cliente', 'Mantener informados y considerar sus necesidades.'],
+					['Medio / medio', 'Desarrollador frontend', 'Informar cambios y darle la información necesaria.'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Planeación</p>
+			<h2 class="text-xl font-semibold text-ink">EDT / WBS</h2>
+			<p class="text-muted max-w-3xl">
+				El alcance se descompuso en <strong class="text-ink font-medium">6 ramas y 60 paquetes de trabajo</strong>, orientados a
+				entregables y cumpliendo la regla del 100 %: cada entregable del enunciado se rastrea a un código de la EDT. Cada
+				paquete tiene responsable, apoyo y criterio de aceptación en el diccionario de la EDT.
+			</p>
+			<Tabla
+				columnas={['Rama', 'Contenido']}
+				filas={[
+					['1. Gestión del proyecto', 'Acta de constitución, interesados, EDT, cronograma, presupuesto, seguimiento Scrum y cierre.'],
+					['2. Fase 1 – Diseño y teoría relacional', 'Propuesta, supuestos, MER (Chen, extendido, pata de gallina), modelo relacional, normalización, diccionario y álgebra.'],
+					['3. Fase 2 – Infraestructura', 'Selección e implementación del sistema operativo, la VM y el RDBMS.'],
+					['4. Fase 2 – Base de datos física', 'Scripts DDL, DML, consultas de negocio, vistas y README.'],
+					['5. Fase 2 – Aplicación web', 'Diseño, backend en Spring Boot, frontend en Angular y pruebas de integración.'],
+					['6. Repositorio, demostración y sustentación', 'GitHub, video de demostración y sustentación.'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Planeación</p>
+			<h2 class="text-xl font-semibold text-ink">Cronograma</h2>
+			<p class="text-muted max-w-3xl">
+				Cada actividad del cronograma está asociada a un paquete de la EDT, con dependencias, ruta crítica calculada
+				hacia la fecha de entrega y diagrama de Gantt en Excel. Se buscó que la carga quedara pareja entre los tres:
+			</p>
+			<Tabla
+				columnas={['Integrante', 'Horas planeadas']}
+				filas={[
+					['Valentina Villegas', '119 h'],
+					['Santiago Monroy', '124 h'],
+					['Anamaria Moreno', '124 h'],
+					['Total', '367 h'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Planeación</p>
+			<h2 class="text-xl font-semibold text-ink">Presupuesto</h2>
+			<p class="text-muted max-w-3xl">
+				Presupuesto simulado en COP. El talento humano se calculó con las horas del cronograma y una tarifa junior de
+				referencia con factor prestacional; todo el software usado es libre o gratuito.
+			</p>
+			<Tabla
+				columnas={['Concepto', 'Costo (COP)']}
+				filas={[
+					['Talento humano (367 h)', '$10.777.015'],
+					['Hardware, conectividad, energía y software', '$328.974'],
+					['Reserva de contingencia (15 %)', '$1.665.898'],
+					['<strong>Costo total</strong>', '<strong>$12.771.887</strong>'],
+				]}
+			/>
+		</article>
+	</section>
+</PageLayout>

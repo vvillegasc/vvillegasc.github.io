@@ -1,0 +1,127 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import Tabla from '../../../components/proyecto/Tabla.astro';
+
+const ejemplos = [
+	{
+		operador: 'Selección σ',
+		enunciado: 'Mesas disponibles con capacidad para 4 o más personas.',
+		expresion: 'σ estado = \'disponible\' ∧ capacidad ≥ 4 (MESA)',
+	},
+	{
+		operador: 'Proyección π',
+		enunciado: 'Nombre y apellido de todos los clientes.',
+		expresion: 'π nombre, apellido (CLIENTE)',
+	},
+	{
+		operador: 'Selección con disyunción',
+		enunciado: 'Pedidos que todavía están pendientes o en preparación.',
+		expresion: 'σ estado = \'pendiente\' ∨ estado = \'en preparacion\' (PEDIDO)',
+	},
+	{
+		operador: 'Reunión ⋈',
+		enunciado: 'Reservas junto con el nombre del cliente que las hizo.',
+		expresion: 'π id_reserva, fecha, hora, nombre, apellido (\n    RESERVA ⋈ RESERVA.cliente_id_cliente = CLIENTE.id_cliente CLIENTE\n)',
+	},
+	{
+		operador: 'Reunión + selección',
+		enunciado: 'Reservas en las que el número de personas supera la capacidad de la mesa asignada.',
+		expresion: 'π id_reserva, num_personas, num_mesa, capacidad (\n    σ num_personas > capacidad (\n        RESERVA ⋈ RESERVA.mesa_num_mesa = MESA.num_mesa MESA\n    )\n)',
+	},
+	{
+		operador: 'Unión ∪',
+		enunciado: 'Identificadores de todo el personal, sea administrador o empleado.',
+		expresion: 'π id_usuario (ADMINISTRADOR) ∪ π id_usuario (EMPLEADO)',
+	},
+	{
+		operador: 'Intersección ∩',
+		enunciado: 'Clientes que tienen registrado tanto un correo como un teléfono.',
+		expresion: 'π cliente_id_cliente (CLIENTE_CORREO) ∩ π cliente_id_cliente (CLIENTE_TELEFONO)',
+	},
+	{
+		operador: 'Diferencia − y renombramiento ρ',
+		enunciado: 'Clientes que no tienen ningún correo registrado.',
+		expresion: 'π id_cliente (CLIENTE) − ρ C(id_cliente) (π cliente_id_cliente (CLIENTE_CORREO))',
+	},
+	{
+		operador: 'Extensión',
+		enunciado: 'Importe de cada línea de pedido.',
+		expresion: 'EXTEND DETALLE_PEDIDO ADD (cantidad * precio) AS importe_linea',
+	},
+	{
+		operador: 'Agregación γ',
+		enunciado: 'Total recaudado y número de pagos por método de pago.',
+		expresion: 'metodo_pago_tipo γ SUM(monto) AS total_recaudado, COUNT(id_pago) AS cantidad_pagos (PAGO)',
+	},
+	{
+		operador: 'División ÷',
+		enunciado: 'Pedidos que incluyen todos los productos disponibles.',
+		expresion: 'ρ DP(id_pedido, id_producto) (π pedido_id_pedido, producto_id_producto (DETALLE_PEDIDO))\n    ÷ π id_producto (σ disponibilidad = \'S\' (PRODUCTO))',
+	},
+];
+---
+
+<PageLayout title="Álgebra relacional · Savana Data Coffee" description="50 consultas en álgebra relacional sobre el modelo de Savana Data Coffee.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects/savana-data-coffee" label="Volver al proyecto" />
+		<p class="eyebrow m-0">Savana Data Coffee · Fase 1</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Álgebra relacional</h1>
+		<p class="text-muted max-w-2xl">
+			50 consultas escritas en álgebra relacional sobre el modelo de la Fase 1, antes de llevar nada a SQL. Sirvieron para
+			comprobar que el modelo responde a las preguntas del negocio.
+		</p>
+		<ProyectoNav actual="algebra" />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Las 50 consultas por tema</h2>
+			<Tabla
+				columnas={['Bloque', 'Tema', 'Consultas']}
+				filas={[
+					['A', 'Clientes y medios de contacto', '9'],
+					['B', 'Personal (staff, administradores y empleados)', '9'],
+					['C', 'Mesas y reservas', '10'],
+					['D', 'Categorías y productos', '9'],
+					['E', 'Pedidos y detalles de pedido', '8'],
+					['F', 'Facturación y pagos', '5'],
+				]}
+			/>
+			<p class="text-sm text-muted m-0">
+				En el modelo de la Fase 1 el subtipo de personal se llamaba <code>EMPLEADO</code>; en la implementación final pasó a <code>MESERO</code>.
+			</p>
+		</article>
+
+		<div class="space-y-3">
+			<p class="eyebrow m-0">Una consulta por operador</p>
+			<div class="grid gap-4 md:grid-cols-2">
+				{ejemplos.map((e) => (
+					<article class="card space-y-3">
+						<p class="eyebrow m-0">{e.operador}</p>
+						<p class="m-0 text-ink">{e.enunciado}</p>
+						<pre class="expresion">{e.expresion}</pre>
+					</article>
+				))}
+			</div>
+		</div>
+	</section>
+</PageLayout>
+
+<style>
+	.expresion {
+		margin: 0;
+		max-width: 100%;
+		overflow-x: auto;
+		padding: 0.85rem 1rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklab, var(--color-ink) 4%, var(--color-surface));
+		color: var(--color-ink);
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		line-height: 1.55;
+		white-space: pre;
+	}
+</style>

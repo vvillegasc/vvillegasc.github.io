@@ -1,0 +1,59 @@
+---
+// Tabla sencilla con el mismo estilo de los apuntes. Las celdas aceptan HTML corto (<code>, <strong>).
+interface Props {
+	columnas: string[];
+	filas: string[][];
+}
+
+const { columnas, filas } = Astro.props as Props;
+---
+
+<div class="tabla overflow-x-auto">
+	<table>
+		<thead>
+			<tr>{columnas.map((c) => <th>{c}</th>)}</tr>
+		</thead>
+		<tbody>
+			{filas.map((fila) => (
+				<tr>{fila.map((celda) => <td set:html={celda} />)}</tr>
+			))}
+		</tbody>
+	</table>
+</div>
+
+<style>
+	.tabla table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.9rem;
+		color: var(--color-muted);
+	}
+
+	.tabla th,
+	.tabla td {
+		text-align: left;
+		padding: 0.5rem 0.85rem;
+		border-bottom: 1px solid var(--color-border);
+		vertical-align: top;
+	}
+
+	.tabla th {
+		color: var(--color-ink);
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.tabla td:first-child {
+		color: var(--color-ink);
+		font-weight: 500;
+	}
+
+	.tabla :global(code) {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85em;
+		padding: 0.1em 0.35em;
+		border-radius: 6px;
+		background: color-mix(in oklab, var(--color-ink) 6%, var(--color-surface));
+		color: var(--color-ink);
+	}
+</style>

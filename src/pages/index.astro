@@ -16,7 +16,6 @@ const evidencias = [
 	{ title: 'Modelado', description: 'MER Biblioteca · Aerolínea · Parcial CineAndes', href: '/evidencias/modelado' },
 	{ title: 'Normalización', description: 'Ejercicios del taller de normalización llevados paso a paso a 1FN, 2FN y 3FN.', href: '/evidencias/normalizacion' },
 	{ title: 'SQL', description: '14 consultas de práctica en Oracle (esquema HR).', href: '/evidencias/sql' },
-	{ title: 'Proyecto', description: 'Próximamente.', href: '/evidencias/proyecto' },
 ];
 
 const projects = (await getCollection('projects'))
@@ -26,7 +25,7 @@ const projects = (await getCollection('projects'))
 		description: project.data.description,
 		heroImage: project.data.heroImage,
 		pubDate: project.data.pubDate,
-		href: `/projects/${project.id}/`,
+		href: project.data.href ?? `/projects/${project.id}/`,
 	}));
 ---
 
@@ -91,9 +90,9 @@ const projects = (await getCollection('projects'))
 		<header class="space-y-2 max-w-2xl">
 			<p class="eyebrow m-0">Evidencias</p>
 			<h2 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink m-0">Evidencias</h2>
-			<p class="text-muted m-0">Apuntes · Modelado · Normalización · SQL · Proyecto — se irán llenando durante el semestre.</p>
+			<p class="text-muted m-0">Apuntes · Modelado · Normalización · SQL — se irán llenando durante el semestre.</p>
 		</header>
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 			{evidencias.map((item) => (
 				<Card title={item.title} description={item.description} href={withBase(item.href)} />
 			))}

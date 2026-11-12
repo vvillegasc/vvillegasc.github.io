@@ -2,7 +2,6 @@
 import PageLayout from '../../../layouts/PageLayout.astro';
 import BackLink from '../../../components/BackLink.astro';
 
-// Esquemas relacionales: "#atributo" = clave primaria (subrayada), "atributo^" = clave foránea (cursiva).
 type Atributo = { nombre: string; pk: boolean; fk: boolean };
 const esquema = (definicion: string) => {
 	const [, nombre, cuerpo] = definicion.match(/^(\w+)\((.*)\)$/)!;

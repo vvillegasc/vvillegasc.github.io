@@ -51,6 +51,9 @@ const projects = defineCollection({
 			updatedDate: z.coerce.date().optional(),
 			heroImage: image().optional(),
 			tags: z.array(z.string()).default([]),
+			// Si el proyecto tiene páginas propias (src/pages/projects/<slug>/), se enlaza aquí
+			// y no se genera la página automática de [slug].astro.
+			href: z.string().optional(),
 		}),
 });
 

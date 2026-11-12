@@ -1,0 +1,142 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import Tabla from '../../../components/proyecto/Tabla.astro';
+
+const pasosPostgres = `sudo apt update && sudo apt upgrade -y
+sudo apt install -y postgresql postgresql-contrib
+sudo systemctl enable postgresql
+
+sudo -u postgres psql
+CREATE ROLE "SavanaDB_Admin" WITH LOGIN PASSWORD '********';
+CREATE DATABASE "savanaDB" OWNER "SavanaDB_Admin";`;
+
+const pasosRed = `# postgresql.conf: escuchar también en la interfaz de la VPN
+listen_addresses = '*'
+
+# pg_hba.conf: conexiones remotas solo con autenticación cifrada
+host  all  all  0.0.0.0/0  scram-sha-256
+
+# Firewall: solo SSH y PostgreSQL
+sudo ufw allow 22/tcp
+sudo ufw allow 5432/tcp
+sudo ufw enable`;
+---
+
+<PageLayout title="Infraestructura · Savana Data Coffee" description="Selección del sistema operativo y del RDBMS, y montaje de la máquina virtual de Savana Data Coffee.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects/savana-data-coffee" label="Volver al proyecto" />
+		<p class="eyebrow m-0">Savana Data Coffee · Fase 2</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Infraestructura</h1>
+		<p class="text-muted max-w-2xl">
+			La base de datos corre en una máquina virtual propia, sin contenedores ni nube. Aquí está por qué se eligieron
+			Debian y PostgreSQL y cómo se montó todo.
+		</p>
+		<ProyectoNav actual="infraestructura" />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Sistema operativo</p>
+			<h2 class="text-xl font-semibold text-ink">Debian 13 “trixie”</h2>
+			<p class="text-muted max-w-3xl">
+				Solo se permitían distribuciones Linux o Unix. Se compararon tres opciones de servidor por estabilidad, seguridad,
+				compatibilidad con PostgreSQL, consumo de recursos y facilidad de administración.
+			</p>
+			<Tabla
+				columnas={['Criterio', 'Debian 13', 'Ubuntu Server 24.04', 'Rocky Linux 9']}
+				filas={[
+					['Estabilidad', 'Muy alta', 'Alta', 'Alta'],
+					['PostgreSQL 17', 'Directo por APT', 'Directo por APT', 'Requiere configurar repositorios (DNF)'],
+					['Consumo de recursos', 'Bajo, sin entorno gráfico', 'Medio-bajo (incluye Snap y servicios extra)', 'Medio'],
+					['Facilidad de administración', 'Media-alta', 'Alta', 'Media'],
+				]}
+			/>
+			<p class="text-muted max-w-3xl">
+				<strong class="text-ink font-medium">Se eligió Debian</strong> por ser la base más liviana y estable para una VM dedicada
+				solo a la base de datos, y porque instala PostgreSQL 17 desde sus repositorios oficiales.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Motor de base de datos</p>
+			<h2 class="text-xl font-semibold text-ink">PostgreSQL 17</h2>
+			<p class="text-muted max-w-3xl">SQL Server estaba excluido. Se compararon PostgreSQL, MySQL y Oracle Database Free:</p>
+			<Tabla
+				columnas={['Criterio', 'PostgreSQL 17', 'MySQL', 'Oracle Database Free']}
+				filas={[
+					['ACID', 'Completo, incluso para DDL', 'Con InnoDB; el DDL confirma la transacción', 'Completo'],
+					['Integridad', 'PK/FK, UNIQUE, CHECK y restricciones diferibles', 'Sin restricciones diferibles', 'Completa'],
+					['En Debian 13', 'Paquete oficial', 'Hay que agregar el repositorio de Oracle', 'Sin soporte oficial'],
+					['Límites', 'Ninguno', 'Ninguno', '2 CPU, 2 GB de RAM y 12 GB de datos'],
+					['Licencia', 'Libre y permisiva', 'GPL (Community)', 'Gratuita con restricciones'],
+				]}
+			/>
+			<p class="text-muted max-w-3xl">
+				<strong class="text-ink font-medium">Se eligió PostgreSQL 17</strong> por su rigor transaccional, porque se instala
+				nativamente en Debian, no impone límites en una VM de 4 GB y se conecta sin problema con Spring Boot por JDBC. Tiene
+				soporte de la comunidad hasta noviembre de 2029.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Máquina virtual</p>
+			<h2 class="text-xl font-semibold text-ink">Savana Coffee VM – DB</h2>
+			<Tabla
+				columnas={['Recurso', 'Configuración']}
+				filas={[
+					['Virtualización', 'VMware Workstation Pro'],
+					['Sistema operativo', 'Debian 13 “trixie”, 64 bits, sin entorno gráfico (solo SSH y utilidades estándar)'],
+					['CPU', '2 procesadores virtuales'],
+					['Memoria', '4 GB'],
+					['Disco', '20 GB, SCSI (LSI Logic)'],
+					['Red', 'NAT + VPN con Tailscale'],
+					['Base de datos', '<code>savanaDB</code> en el puerto 5432, rol <code>SavanaDB_Admin</code>'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Implementación</p>
+			<h2 class="text-xl font-semibold text-ink">Instalación del gestor</h2>
+			<p class="text-muted max-w-3xl">
+				PostgreSQL se instala desde los repositorios de Debian, queda como servicio de systemd y se crean el rol y la base de
+				datos. Los nombres van entre comillas dobles para que PostgreSQL conserve las mayúsculas.
+			</p>
+			<pre class="bloque">{pasosPostgres}</pre>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Implementación</p>
+			<h2 class="text-xl font-semibold text-ink">Red, acceso remoto y seguridad</h2>
+			<p class="text-muted max-w-3xl">
+				La red universitaria bloqueaba las conexiones directas, así que la VM se unió a una VPN de
+				<strong class="text-ink font-medium">Tailscale</strong>: cada integrante se conecta a la base desde su equipo sin abrir
+				puertos en el router. Además, PostgreSQL solo acepta conexiones remotas con <code>scram-sha-256</code> y el firewall
+				deja abiertos únicamente SSH y el puerto de PostgreSQL.
+			</p>
+			<pre class="bloque">{pasosRed}</pre>
+			<p class="text-muted max-w-3xl">
+				El backend se conecta con la IP de Tailscale de la VM, y la contraseña llega por una variable de entorno para no
+				quedar en el repositorio.
+			</p>
+		</article>
+	</section>
+</PageLayout>
+
+<style>
+	.bloque {
+		margin: 0;
+		max-width: 100%;
+		overflow-x: auto;
+		padding: 1rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklab, var(--color-ink) 4%, var(--color-surface));
+		color: var(--color-ink);
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		line-height: 1.55;
+	}
+</style>

@@ -1,0 +1,32 @@
+---
+// Navegación entre las subpáginas de Savana Data Coffee: chips con la sección actual resaltada.
+import { BASE_SAVANA, secciones } from '../../utils/savana';
+import { withBase } from '../../utils/slugify';
+
+interface Props {
+	actual?: string;
+}
+
+const { actual } = Astro.props as Props;
+const items = [{ slug: '', title: 'Resumen' }, ...secciones];
+---
+
+<nav aria-label="Secciones del proyecto" class="flex flex-wrap gap-2 pt-2">
+	{items.map((item) => {
+		const activo = (actual ?? '') === item.slug;
+		return (
+			<a
+				href={withBase(item.slug ? `${BASE_SAVANA}/${item.slug}` : BASE_SAVANA)}
+				aria-current={activo ? 'page' : undefined}
+				class:list={[
+					'rounded-full border px-3 py-1 text-xs transition-colors duration-150',
+					activo
+						? 'border-[color:var(--color-ink)] bg-[color:var(--color-ink)] text-[color:var(--color-surface)]'
+						: 'border-[color:var(--color-border)] text-muted hover:text-ink',
+				]}
+			>
+				{item.title}
+			</a>
+		);
+	})}
+</nav>

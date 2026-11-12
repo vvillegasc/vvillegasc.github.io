@@ -1,6 +1,4 @@
 ---
-// Muestra las secciones de un apunte escrito en Markdown: cada sección en su propio cuadro numerado,
-// con el mismo estilo que los apuntes hechos a mano (texto gris, negritas en color principal, tablas finas).
 interface Props {
 	secciones: { frontmatter: { title: string }; Content: any }[];
 }
@@ -22,7 +20,6 @@ const { secciones } = Astro.props;
 <style>
 	.apunte {
 		color: var(--color-muted);
-		/* Si una tabla no cabe (pantallas angostas), se desplaza de lado sin romper el texto. */
 		overflow-x: auto;
 	}
 

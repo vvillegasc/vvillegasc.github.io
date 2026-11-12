@@ -2,10 +2,6 @@
 const { class: className = '' } = Astro.props;
 ---
 
-<!--
-	Los colores de la tipografía salen de los tokens del sitio (--color-ink, --color-muted, --color-border)
-	para que sigan el tema elegido con el selector (claro / oscuro / azul) y no el modo del sistema operativo.
--->
 <article class={`prose max-w-none site-prose ${className}`.trim()}>
 	<slot />
 </article>

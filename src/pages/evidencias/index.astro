@@ -9,7 +9,6 @@ const evidencias = [
 	{ title: 'Modelado', description: 'MER Biblioteca · Aerolínea · Parcial CineAndes', href: '/evidencias/modelado' },
 	{ title: 'Normalización', description: 'Ejercicios del taller de normalización llevados paso a paso a 1FN, 2FN y 3FN.', href: '/evidencias/normalizacion' },
 	{ title: 'SQL', description: '14 consultas de práctica en Oracle (esquema HR).', href: '/evidencias/sql' },
-	{ title: 'Proyecto', description: 'Próximamente.', href: '/evidencias/proyecto' },
 ];
 ---
 
@@ -19,10 +18,10 @@ const evidencias = [
 			<BackLink href="/" label="Volver al inicio" />
 			<p class="eyebrow m-0">Bases de Datos 1</p>
 			<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Evidencias</h1>
-			<p class="text-muted">Apuntes · Modelado · Normalización · SQL · Proyecto — se irán llenando durante el semestre.</p>
+			<p class="text-muted">Apuntes · Modelado · Normalización · SQL — se irán llenando durante el semestre.</p>
 		</header>
 
-		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 			{evidencias.map((item) => (
 				<Card title={item.title} description={item.description} href={withBase(item.href)} />
 			))}

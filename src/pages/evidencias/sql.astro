@@ -2,7 +2,6 @@
 import PageLayout from '../../layouts/PageLayout.astro';
 import BackLink from '../../components/BackLink.astro';
 
-// Cada consulta vive en su propio .md (src/content/evidencias/sql/NN.md); el número del archivo define el orden.
 const modulos = import.meta.glob('../../content/evidencias/sql/*.md', { eager: true });
 const consultas = Object.keys(modulos)
 	.sort()

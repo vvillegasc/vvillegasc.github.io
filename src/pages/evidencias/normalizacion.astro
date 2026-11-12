@@ -3,7 +3,6 @@ import PageLayout from '../../layouts/PageLayout.astro';
 import BackLink from '../../components/BackLink.astro';
 import Prose from '../../components/Prose.astro';
 
-// Cada ejercicio vive en su propio .md; el prefijo numérico del archivo define el orden.
 const modulos = import.meta.glob('../../content/evidencias/normalizacion/*.md', { eager: true });
 const ejercicios = Object.keys(modulos)
 	.sort()

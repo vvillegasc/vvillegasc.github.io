@@ -1,0 +1,172 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import Tabla from '../../../components/proyecto/Tabla.astro';
+import Figura from '../../../components/proyecto/Figura.astro';
+
+const ddl = `CREATE TABLE pedido (
+    id_pedido          BIGSERIAL    PRIMARY KEY,
+    cliente_id_cliente BIGINT       NOT NULL REFERENCES cliente (id_cliente),
+    mesa_num_mesa      INT          NOT NULL REFERENCES mesa (num_mesa),
+    staff_id_usuario   BIGINT       NOT NULL REFERENCES staff (id_usuario),
+    fecha              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    estado             VARCHAR(30)  NOT NULL DEFAULT 'PENDIENTE',
+    observaciones      TEXT
+);
+
+CREATE TABLE detalle_pedido (
+    pedido_id_pedido     BIGINT NOT NULL REFERENCES pedido (id_pedido) ON DELETE CASCADE,
+    producto_id_producto BIGINT NOT NULL REFERENCES producto (id_producto),
+    cantidad             INT    NOT NULL,
+    precio               DOUBLE PRECISION NOT NULL DEFAULT 0,  -- precio al momento del pedido
+    PRIMARY KEY (pedido_id_pedido, producto_id_producto)
+);`;
+
+const calculo = `subtotal = Σ (cantidad × precio) de los detalles del pedido
+impuesto = subtotal × 0,19
+total    = subtotal + impuesto + propina
+Σ pagos  = total   → si no cuadra, el pago se rechaza`;
+
+const capturas = [
+	{ src: '/projects/savana/app-inicio.png', alt: 'Página de inicio pública', caption: 'Inicio público de la cafetería.' },
+	{ src: '/projects/savana/app-reserva.png', alt: 'Reserva de mesa', caption: 'Reserva sin cuenta: el sistema confirma disponibilidad y pide los datos.' },
+	{ src: '/projects/savana/app-login.png', alt: 'Inicio de sesión', caption: 'Inicio de sesión del personal.' },
+	{ src: '/projects/savana/app-dashboard.png', alt: 'Panel del administrador', caption: 'Panel del administrador: indicadores del día y estado de las mesas.' },
+	{ src: '/projects/savana/app-mesas.png', alt: 'Tablero de mesas', caption: 'Tablero de mesas del mesero.' },
+	{ src: '/projects/savana/app-pedidos.png', alt: 'Pedidos', caption: 'Pedidos en sus distintos estados.' },
+	{ src: '/projects/savana/app-cobro.png', alt: 'Cobro de un pedido', caption: 'Cobro con propina y pago dividido en efectivo y tarjeta.' },
+	{ src: '/projects/savana/app-factura.png', alt: 'Detalle de factura', caption: 'Factura generada con IVA, propina y pagos.' },
+	{ src: '/projects/savana/app-menu.png', alt: 'Gestión del menú', caption: 'Gestión del menú por categoría.' },
+];
+
+---
+
+<PageLayout title="Implementación y app web · Savana Data Coffee" description="Scripts SQL, arquitectura, roles y reglas de negocio de la aplicación web de Savana Data Coffee.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects/savana-data-coffee" label="Volver al proyecto" />
+		<p class="eyebrow m-0">Savana Data Coffee · Fase 2</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Implementación y app web</h1>
+		<p class="text-muted max-w-2xl">
+			Del modelo lógico al físico con scripts SQL, y una aplicación web de tres capas que trabaja sobre esa base. Yo estuve
+			a cargo del frontend en Angular.
+		</p>
+		<ProyectoNav actual="aplicacion" />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Base de datos física</p>
+			<h2 class="text-xl font-semibold text-ink">Scripts SQL</h2>
+			<p class="text-muted max-w-3xl">Los scripts viven en la carpeta <code>database/</code> del repositorio, con su README de ejecución:</p>
+			<Tabla
+				columnas={['Script', 'Para qué']}
+				filas={[
+					['Creación de objetos', 'Tablas, llaves, restricciones NOT NULL, CHECK y UNIQUE.'],
+					['Inserción de registros', 'Datos de prueba: personal, clientes, mesas, categorías, productos y métodos de pago.'],
+					['Consultas de validación y de negocio', 'Comprobar la integridad de los datos y responder preguntas del negocio.'],
+					['Respaldo y limpieza', 'Sacar copia de la base y dejarla en blanco para volver a cargarla.'],
+				]}
+			/>
+			<p class="text-muted m-0">Un extracto del DDL, con la relación N:M entre pedido y producto:</p>
+			<pre class="bloque">{ddl}</pre>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Arquitectura</p>
+			<h2 class="text-xl font-semibold text-ink">Tres capas</h2>
+			<div class="grid gap-3 md:grid-cols-3">
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-1">
+					<p class="eyebrow m-0">Presentación</p>
+					<p class="m-0 font-semibold text-ink">Angular · TypeScript</p>
+					<p class="m-0 text-sm text-muted">Vistas por rol, guarda el token y consume la API REST.</p>
+				</div>
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-1">
+					<p class="eyebrow m-0">Lógica</p>
+					<p class="m-0 font-semibold text-ink">Spring Boot · Java 21</p>
+					<p class="m-0 text-sm text-muted">API REST con Spring Security y JWT. Las reglas de negocio viven aquí.</p>
+				</div>
+				<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-1">
+					<p class="eyebrow m-0">Datos</p>
+					<p class="m-0 font-semibold text-ink">PostgreSQL 17 en la VM</p>
+					<p class="m-0 text-sm text-muted">Acceso con JdbcTemplate y SQL escrito a mano.</p>
+				</div>
+			</div>
+			<p class="text-muted max-w-3xl">
+				Una restricción del proyecto fue <strong class="text-ink font-medium">no usar JPA ni ningún ORM</strong>: todas las consultas
+				del backend son SQL parametrizado con <code>JdbcTemplate</code>, lo que obligó a aplicar directamente lo visto en el curso.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Seguridad</p>
+			<h2 class="text-xl font-semibold text-ink">Roles y permisos</h2>
+			<p class="text-muted max-w-3xl">
+				El personal inicia sesión con correo y contraseña, con un código de 6 dígitos por correo si tiene activo el segundo
+				factor. El token dura 24 horas. El cliente no tiene cuenta.
+			</p>
+			<Tabla
+				columnas={['Acción', 'Público', 'Mesero', 'Administrador']}
+				filas={[
+					['Ver menú y reservar mesa', 'Sí', 'Sí', 'Sí'],
+					['Gestionar reservas y estado de las mesas', '—', 'Sí', 'Sí'],
+					['Registrar clientes', '—', 'Sí', 'Sí'],
+					['Tomar pedidos y cambiar su estado', '—', 'Sí', '—'],
+					['Cobrar y generar la factura', '—', 'Sí', '—'],
+					['Gestionar menú, mesas y métodos de pago', '—', '—', 'Sí'],
+					['Gestionar el personal y ver el dashboard', '—', '—', 'Sí'],
+				]}
+			/>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Reglas de negocio</p>
+			<h2 class="text-xl font-semibold text-ink">Lo que valida el sistema</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Reservas:</strong> deben ser a futuro, la mesa debe tener capacidad, no estar en mantenimiento y no tener otra reserva activa 3 horas antes o después. Al buscar mesa, el sistema sugiere primero la de menor capacidad que sirva.</li>
+				<li><strong class="text-ink font-medium">Pedidos:</strong> cada producto debe estar disponible y con stock; al crear el pedido se descuenta el stock y la mesa pasa a OCUPADA.</li>
+				<li><strong class="text-ink font-medium">Estados del pedido:</strong> solo avanzan hacia adelante, y solo se puede cancelar mientras está pendiente.</li>
+				<li><strong class="text-ink font-medium">Cobro:</strong> un pedido se factura una sola vez y la suma de los pagos debe cuadrar con el total. Todo ocurre en una sola transacción: factura, pagos, pedido PAGADO y mesa DISPONIBLE.</li>
+				<li><strong class="text-ink font-medium">Clientes:</strong> no se pueden borrar si tienen reservas activas o historial de pedidos y facturas.</li>
+				<li><strong class="text-ink font-medium">Correos:</strong> el sistema envía la confirmación y la cancelación de reservas, el código de 2FA y la factura.</li>
+			</ul>
+			<div class="grid gap-4 md:grid-cols-2">
+				<div class="space-y-2">
+					<p class="eyebrow m-0">Flujo del pedido</p>
+					<pre class="bloque">PENDIENTE → EN_PREPARACION → ENTREGADO → PAGADO
+    ↓
+CANCELADO</pre>
+				</div>
+				<div class="space-y-2">
+					<p class="eyebrow m-0">Cálculo de la factura</p>
+					<pre class="bloque">{calculo}</pre>
+				</div>
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<p class="eyebrow m-0">Resultado</p>
+			<h2 class="text-xl font-semibold text-ink">La aplicación</h2>
+			<p class="text-muted max-w-3xl">Capturas del frontend en Angular con datos de prueba.</p>
+			<div class="grid gap-4 md:grid-cols-2">
+				{capturas.map((c) => <Figura src={c.src} alt={c.alt} caption={c.caption} fondoBlanco={false} />)}
+			</div>
+		</article>
+	</section>
+</PageLayout>
+
+<style>
+	.bloque {
+		margin: 0;
+		max-width: 100%;
+		overflow-x: auto;
+		padding: 1rem;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: 1px solid var(--color-border);
+		background: color-mix(in oklab, var(--color-ink) 4%, var(--color-surface));
+		color: var(--color-ink);
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.85rem;
+		line-height: 1.55;
+	}
+</style>

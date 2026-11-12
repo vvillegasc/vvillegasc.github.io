@@ -1,0 +1,128 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+import BackLink from '../../../components/BackLink.astro';
+import Card from '../../../components/Card.astro';
+import ProyectoNav from '../../../components/proyecto/ProyectoNav.astro';
+import { BASE_SAVANA, enlaces, secciones } from '../../../utils/savana';
+import { withBase } from '../../../utils/slugify';
+
+const cifras = [
+	{ valor: '15', etiqueta: 'tablas en 3FN' },
+	{ valor: '50', etiqueta: 'consultas en álgebra relacional' },
+	{ valor: '4', etiqueta: 'sprints de Scrum' },
+	{ valor: '367 h', etiqueta: 'de trabajo planeadas' },
+];
+
+const equipo = [
+	{ nombre: 'Valentina Villegas', rol: 'Gerente del proyecto · Scrum Master', aportes: 'Planeación (EDT, cronograma, presupuesto), MER extendido, diccionario de datos, selección del RDBMS, frontend en Angular y acta de cierre.' },
+	{ nombre: 'Santiago Monroy', rol: 'Backend e infraestructura', aportes: 'Máquina virtual, red y firewall, backend en Spring Boot, conexión a la base de datos, álgebra relacional y video.' },
+	{ nombre: 'Anamaria Moreno', rol: 'Modelado de datos', aportes: 'Stakeholders, supuestos, MER y modelo relacional, normalización y scripts SQL.' },
+];
+
+const stack = ['PostgreSQL 17', 'Debian 13 “trixie”', 'VMware Workstation Pro', 'Tailscale', 'Spring Boot · Java 21', 'JdbcTemplate (sin JPA)', 'Spring Security + JWT', 'Angular · TypeScript', 'GitHub', 'Notion'];
+---
+
+<PageLayout title="Savana Data Coffee · Proyectos" description="Proyecto final de Bases de Datos 1: sistema de gestión para una cafetería.">
+	<section class="content-shell py-12 space-y-4">
+		<BackLink href="/projects" label="Volver a Proyectos" />
+		<p class="eyebrow m-0">Proyecto final · Bases de Datos 1 · 2026-2</p>
+		<h1 class="text-3xl sm:text-4xl font-semibold leading-tight text-ink">Savana Data Coffee</h1>
+		<p class="text-muted max-w-3xl">
+			Sistema de gestión para una cafetería construido sobre una base de datos relacional normalizada hasta 3FN.
+			Cubre todo el recorrido del curso: del modelo entidad-relación y el álgebra relacional a PostgreSQL corriendo en
+			una máquina virtual y una aplicación web que lo usa.
+		</p>
+		<div class="flex flex-wrap gap-2 pt-1">
+			{enlaces.repoFront && <a class="button secondary" href={enlaces.repoFront} target="_blank" rel="noopener noreferrer">Repo frontend</a>}
+			{enlaces.repoBack && <a class="button secondary" href={enlaces.repoBack} target="_blank" rel="noopener noreferrer">Repo backend</a>}
+		</div>
+		<ProyectoNav />
+	</section>
+
+	<section class="content-shell pb-16 space-y-6">
+		<div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
+			{cifras.map((c) => (
+				<div class="card">
+					<p class="m-0 text-3xl font-semibold text-ink">{c.valor}</p>
+					<p class="m-0 text-sm text-muted">{c.etiqueta}</p>
+				</div>
+			))}
+		</div>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">El problema</h2>
+			<p class="text-muted max-w-3xl">
+				Muchas cafeterías pequeñas llevan su operación en registros manuales o en aplicaciones que no se hablan entre sí.
+				Eso se traduce en pedidos mal tomados, mesas cuyo estado nadie conoce, inventario sin control, reservas que se
+				cruzan y facturas que tardan.
+			</p>
+			<p class="text-muted max-w-3xl">
+				<strong class="text-ink font-medium">Objetivo:</strong> diseñar e implementar un sistema que centralice clientes, personal,
+				productos y categorías, mesas, reservas, pedidos, facturas y pagos de una única sede, en una base de datos que
+				garantice integridad (3FN) y transacciones ACID.
+			</p>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Qué hace el sistema</h2>
+			<ul class="text-muted max-w-3xl list-disc pl-5 space-y-1.5">
+				<li><strong class="text-ink font-medium">Personal:</strong> inicio de sesión con correo y contraseña (y segundo factor opcional), con dos roles: administrador y mesero.</li>
+				<li><strong class="text-ink font-medium">Catálogo:</strong> productos agrupados por categoría, con precio, stock y disponibilidad.</li>
+				<li><strong class="text-ink font-medium">Salón y reservas:</strong> mesas con estado y capacidad; el cliente reserva sin cuenta y el sistema le asigna la mesa que mejor se ajusta.</li>
+				<li><strong class="text-ink font-medium">Pedidos:</strong> comandas en mesa que descuentan stock y avanzan por estados hasta pagarse.</li>
+				<li><strong class="text-ink font-medium">Facturación:</strong> una factura por pedido con IVA del 19 % y propina, pagable con varios métodos a la vez.</li>
+				<li><strong class="text-ink font-medium">Dashboard:</strong> ventas del día, pedidos activos, mesas disponibles y reservas de hoy.</li>
+			</ul>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Equipo</h2>
+			<p class="text-muted m-0">L@s Chic@s Super Poderos@s · Docente: Christian Felipe Duarte Arévalo · Universidad El Bosque</p>
+			<div class="grid gap-4 md:grid-cols-3">
+				{equipo.map((p) => (
+					<div class="rounded-[calc(var(--radius-card)-4px)] border border-border p-4 space-y-1">
+						<p class="m-0 font-semibold text-ink">{p.nombre}</p>
+						<p class="m-0 text-xs uppercase tracking-[0.2em] text-subtle">{p.rol}</p>
+						<p class="m-0 pt-1 text-sm text-muted">{p.aportes}</p>
+					</div>
+				))}
+			</div>
+		</article>
+
+		<article class="card space-y-4">
+			<h2 class="text-xl font-semibold text-ink">Tecnologías</h2>
+			<ul class="flex flex-wrap gap-2 m-0 p-0 list-none">
+				{stack.map((t) => (
+					<li class="rounded-full border border-border px-3 py-1 text-sm text-muted">{t}</li>
+				))}
+			</ul>
+		</article>
+
+		{enlaces.video && (
+			<article class="card space-y-4">
+				<h2 class="text-xl font-semibold text-ink">Video de demostración</h2>
+				<div class="aspect-video w-full overflow-hidden rounded-[calc(var(--radius-card)-4px)] border border-border">
+					<iframe class="h-full w-full" src={enlaces.video} title="Video de demostración de Savana Data Coffee" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
+			</article>
+		)}
+
+		<div class="space-y-3">
+			<p class="eyebrow m-0">Explora el proyecto</p>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{secciones.map((s) => (
+					<Card title={s.title} description={s.description} href={withBase(`${BASE_SAVANA}/${s.slug}`)} />
+				))}
+			</div>
+		</div>
+
+		<article class="card space-y-3">
+			<h2 class="text-xl font-semibold text-ink">Resultado</h2>
+			<p class="text-muted max-w-3xl">
+				El sistema quedó terminado el 1 de noviembre de 2026, se entregó el 6 de noviembre con todos los documentos de
+				Fase 1, Fase 2 y gestión, y se sustentó el 10 de noviembre. La entrega incluyó el video de demostración con
+				los tres integrantes.
+			</p>
+		</article>
+	</section>
+</PageLayout>

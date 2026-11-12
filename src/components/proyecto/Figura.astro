@@ -1,0 +1,52 @@
+---
+// Muestra una imagen de public/ si existe; si todavía no está, deja un recuadro con el nombre esperado.
+// Si junto al PNG hay un .drawio con el mismo nombre, al hacer clic se abre en el visor web de draw.io;
+// si no, se abre la imagen en tamaño completo.
+import fs from 'node:fs';
+import path from 'node:path';
+import { withBase } from '../../utils/slugify';
+
+interface Props {
+	src: string; // ruta dentro de public/, ej. /projects/savana/mer-chen.png
+	alt: string;
+	caption?: string;
+	fondoBlanco?: boolean; // para diagramas con fondo transparente
+}
+
+const { src, alt, caption, fondoBlanco = true } = Astro.props as Props;
+const enPublic = (ruta: string) => fs.existsSync(path.join(process.cwd(), 'public', ruta));
+const existe = enPublic(src);
+
+// El visor de draw.io descarga el archivo desde el sitio publicado (Astro.site), así que funciona una vez desplegado.
+const rutaDrawio = src.replace(/\.(png|svg|jpe?g)$/i, '.drawio');
+// En `astro dev` el sitio publicado aún no tiene los archivos nuevos, así que en local se abre el PNG.
+const tieneDrawio = !import.meta.env.DEV && existe && rutaDrawio !== src && enPublic(rutaDrawio) && Astro.site;
+const urlDrawio = tieneDrawio ? new URL(withBase(rutaDrawio), Astro.site).href : '';
+const nombreDrawio = rutaDrawio.split('/').pop() ?? '';
+const href = tieneDrawio
+	? `https://viewer.diagrams.net/?lightbox=1&nav=1&layers=1&edit=_blank&title=${encodeURIComponent(nombreDrawio)}#U${encodeURIComponent(urlDrawio)}`
+	: withBase(src);
+const ayuda = tieneDrawio
+	? 'Clic en el diagrama para abrirlo en draw.io (zoom y navegación).'
+	: 'Clic en la imagen para verla en tamaño completo.';
+---
+
+<figure class="m-0 space-y-2">
+	{existe ? (
+		<div class:list={['rounded-[calc(var(--radius-card)-4px)] border border-border p-4 overflow-x-auto', fondoBlanco && 'bg-white']}>
+			<a href={href} target="_blank" rel="noopener noreferrer" title={tieneDrawio ? 'Abrir en draw.io' : 'Abrir en tamaño completo'}>
+				<img src={withBase(src)} alt={alt} loading="lazy" class="mx-auto max-w-full" />
+			</a>
+		</div>
+	) : (
+		<div class="flex min-h-40 flex-col items-center justify-center gap-1 rounded-[calc(var(--radius-card)-4px)] border border-dashed border-border p-6 text-center">
+			<p class="m-0 text-sm text-muted">Imagen pendiente</p>
+			<code class="text-xs text-subtle">public{src}</code>
+		</div>
+	)}
+	{(caption || existe) && (
+		<figcaption class="text-xs text-muted">
+			{caption}{caption && existe && ' · '}{existe && ayuda}
+		</figcaption>
+	)}
+</figure>
